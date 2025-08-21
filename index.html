@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Brainrot</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            text-align: center;
+            background-color: #000;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #board {
+            background-color: skyblue;
+            background-size: cover;
+            background-position: center;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="board"></canvas>
+
+    <script>
+        //board
+        let board;
+        let boardWidth = 360;
+        let boardHeight = 640;
+        let context;
+
+        //bird
+        let birdWidth = 34; //width/height ratio = 408/228 = 17/12
+        let birdHeight = 24;
+        let birdX = boardWidth/8;
+        let birdY = boardHeight/2;
+        let birdImg;
+
+        let bird = {
+            x : birdX,
+            y : birdY,
+            width : birdWidth,
+            height : birdHeight
+        }
+
+        //pipes
+        let pipeArray = [];
+        let pipeWidth = 64; //width/height ratio = 384/3072 = 1/8
+        let pipeHeight = 512;
+        let pipeX = boardWidth;
+        let pipeY = 0;
+
+        let topPipeImg;
+        let bottomPipeImg;
+
+        //physics
+        let velocityX = -2; //pipes moving left speed
+        let velocityY = 0; //bird jump speed
+        let gravity = 0.4;
+
+        let gameOver = false;
+        let score = 0;
+
+        // Backgrounds
+        const backgrounds = [
+            'https://i.kym-cdn.com/entries/icons/original/000/048/833/cover7.jpg', // Default
+            'https://i.kym-cdn.com/entries/icons/original/000/048/633/cover5.jpg', // Score 20+
+            'https://i.ytimg.com/vi/bX8tNte_S5Q/maxresdefault.jpg', // Score 30+
+            'https://i.kym-cdn.com/photos/images/newsfeed/002/769/341/576.jpg', // Score 40+
+            'https://i.kym-cdn.com/entries/icons/facebook/000/048/572/Screenshot_2024-03-01_at_12.21.13_PM.jpg' // Score 50+
+        ];
+
+        const travisScottBackground = 'https://media.npr.org/assets/img/2018/08/01/travisscott_custom-c4a52a3472a7c4583b7c4a172a39a92451552a8a-s1100-c50.jpg';
+
+        window.onload = function() {
+            board = document.getElementById("board");
+            board.height = boardHeight;
+            board.width = boardWidth;
+            context = board.getContext("2d");
+
+            //load images
+            birdImg = new Image();
+            birdImg.src = "https://i.imgur.com/w1J7S2p.png";
+            birdImg.onload = function() {
+                context.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
+            }
+
+            topPipeImg = new Image();
+            topPipeImg.src = "https://i.imgur.com/v2s1x5H.png";
+
+            bottomPipeImg = new Image();
+            bottomPipeImg.src = "https://i.imgur.com/v2s1x5H.png";
+
+            requestAnimationFrame(update);
+            setInterval(placePipes, 1500); //every 1.5 seconds
+            document.addEventListener("keydown", moveBird);
+            document.addEventListener("touchstart", moveBird);
+
+            updateBackground();
+        }
+
+        function update() {
+            requestAnimationFrame(update);
+            if (gameOver) {
+                return;
+            }
+            context.clearRect(0, 0, board.width, board.height);
+
+            //bird
+            velocityY += gravity;
+            bird.y = Math.max(bird.y + velocityY, 0);
+            context.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
+
+            if (bird.y > board.height) {
+                gameOver = true;
+            }
+
+            //pipes
+            for (let i = 0; i < pipeArray.length; i++) {
+                let pipe = pipeArray[i];
+                pipe.x += velocityX;
+                context.drawImage(pipe.img, pipe.x, pipe.y, pipe.width, pipe.height);
+
+                if (!pipe.passed && bird.x > pipe.x + pipe.width) {
+                    score += 0.5;
+                    pipe.passed = true;
+                    if (score % 10 === 0) {
+                        updateBackground();
+                    }
+                }
+
+                if (detectCollision(bird, pipe)) {
+                    gameOver = true;
+                }
+            }
+
+            //clear pipes
+            while (pipeArray.length > 0 && pipeArray[0].x < -pipeWidth) {
+                pipeArray.shift();
+            }
+
+            //score
+            context.fillStyle = "white";
+            context.font="45px sans-serif";
+            context.fillText(score, 5, 45);
+
+            if (gameOver) {
+                context.fillText("GAME OVER", 5, 90);
+            }
+        }
+
+        function placePipes() {
+            if (gameOver) {
+                return;
+            }
+
+            let randomPipeY = pipeY - pipeHeight/4 - Math.random()*(pipeHeight/2);
+            let openingSpace = board.height/4;
+
+            let topPipe = {
+                img : topPipeImg,
+                x : pipeX,
+                y : randomPipeY,
+                width : pipeWidth,
+                height : pipeHeight,
+                passed : false
+            }
+            pipeArray.push(topPipe);
+
+            let bottomPipe = {
+                img : bottomPipeImg,
+                x : pipeX,
+                y : randomPipeY + pipeHeight + openingSpace,
+                width : pipeWidth,
+                height : pipeHeight,
+                passed : false
+            }
+            pipeArray.push(bottomPipe);
+        }
+
+        function moveBird(e) {
+            if (e.code == "Space" || e.code == "ArrowUp" || e.code == "KeyX" || e.type == "touchstart") {
+                //jump
+                velocityY = -6;
+
+                //reset game
+                if (gameOver) {
+                    bird.y = birdY;
+                    pipeArray = [];
+                    score = 0;
+                    gameOver = false;
+                    updateBackground();
+                }
+            }
+        }
+
+        function detectCollision(a, b) {
+            return a.x < b.x + b.width &&
+                   a.x + a.width > b.x &&
+                   a.y < b.y + b.height &&
+                   a.y + a.height > b.y;
+        }
+
+        function updateBackground() {
+            let bgIndex = Math.floor(score / 10);
+            if (score === 10) {
+                board.style.backgroundImage = `url(${travisScottBackground})`;
+            } else if (bgIndex < backgrounds.length) {
+                board.style.backgroundImage = `url(${backgrounds[bgIndex]})`;
+            } else {
+                 board.style.backgroundImage = `url(${backgrounds[backgrounds.length - 1]})`;
+            }
+        }
+    </script>
+</body>
+</html>
