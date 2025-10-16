@@ -69,7 +69,7 @@
             box-shadow: 0 0 25px rgba(166, 216, 240, 0.5);
             animation: fadeIn 0.5s ease-out;
             width: 600px;
-            z-index: 10; /* Garante que o menu fique por cima de tudo */
+            z-index: 10;
         }
 
         @keyframes fadeIn {
@@ -180,20 +180,27 @@
 
         let gameState = 'startScreen';
         let score = 0, level = 1, pipeSpeed = 15, frames = 0;
-        let pipes = [], bossProjectiles = [], playerProjectiles = [], boss = null, bossHealth = 0;
+        let pipes = [], bossProjectiles = [], playerProjectiles = [], boss = null, bossHealth = 0, drones = [];
         let boss50Defeated = false;
         const keys = { w: false, a: false, s: false, d: false, space: false };
-        
-        const bird = { 
-            x: 150, y: canvas.height / 2, width: 50, height: 35, 
-            velocity: 0, gravity: 0.65, jumpPower: -11, terminalVelocity: 15, 
-            moveSpeed: 8, rotation: 0, wingPosition: 0, 
-            color: '#FFD700', wingColor: '#FFA500', eyeColor: '#000', beakColor: '#FF6B35', 
-            shootCooldown: 0 
-        };
+        const bird = { x: 150, y: canvas.height / 2, width: 50, height: 35, velocity: 0, gravity: 0.65, jumpPower: -11, terminalVelocity: 15, moveSpeed: 7, rotation: 0, wingPosition: 0, color: '#FFD700', wingColor: '#FFA500', eyeColor: '#000', beakColor: '#FF6B35', shootCooldown: 0 };
 
-        const cheatCode = ['ArrowUp', 'ArrowDown', 'ArrowRight', 'ArrowLeft'];
-        let cheatCodePosition = 0;
+        const cheatCode50 = ['ArrowUp', 'ArrowDown', 'ArrowRight', 'ArrowLeft'];
+        let cheatCode50Position = 0;
+        const cheatCode100 = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+        let cheatCode100Position = 0;
+
+        const qteKeys = ['Q', 'R', 'S', 'F', 'T'];
+        let qteState = { active: false, x: 0, y: 0, outerRadius: 200, innerRadius: 50, shrinkSpeed: 2.5, currentKey: null, feedbackTimer: 0, feedbackColor: '' };
+        let qteSuccessesNeeded = 5, qteSuccessCount = 0, qteFails = 0;
+
+        let stars = [];
+        function createStars() {
+            stars = [];
+            for (let i = 0; i < 100; i++) {
+                stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, radius: Math.random() * 1.5 });
+            }
+        }
 
         function drawBird() {
             ctx.save(); ctx.translate(bird.x + bird.width / 2, bird.y + bird.height / 2); ctx.rotate(bird.rotation);
@@ -225,10 +232,27 @@
         function drawBoss() {
             if (!boss) return;
             ctx.fillStyle = boss.color; ctx.beginPath(); ctx.arc(boss.x + boss.width / 2, boss.y + boss.height / 2, boss.width / 2, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(boss.x + boss.width / 3, boss.y + boss.height / 3, 8, 0, Math.PI * 2); ctx.arc(boss.x + 2 * boss.width / 3, boss.y + boss.height / 3, 8, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(boss.x + boss.width / 3, boss.y + boss.height / 3, 4, 0, Math.PI * 2); ctx.arc(boss.x + 2 * boss.width / 3, boss.y + boss.height / 3, 4, 0, Math.PI * 2); ctx.fill();
+            const eyeX1 = boss.x + boss.width / 3, eyeY1 = boss.y + boss.height / 3;
+            const eyeX2 = boss.x + 2 * boss.width / 3, eyeY2 = boss.y + boss.height / 3;
+            if (boss.isEnraged) {
+                const flameSize = 10 + Math.sin(frames * 0.3) * 3;
+                ctx.fillStyle = 'red'; ctx.beginPath(); ctx.arc(eyeX1, eyeY1, flameSize, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = 'orange'; ctx.beginPath(); ctx.arc(eyeX1, eyeY1, flameSize * 0.6, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = 'red'; ctx.beginPath(); ctx.arc(eyeX2, eyeY2, flameSize, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = 'orange'; ctx.beginPath(); ctx.arc(eyeX2, eyeY2, flameSize * 0.6, 0, Math.PI * 2); ctx.fill();
+            } else {
+                ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(eyeX1, eyeY1, 8, 0, Math.PI * 2); ctx.arc(eyeX2, eyeY2, 8, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(eyeX1, eyeY1, 4, 0, Math.PI * 2); ctx.arc(eyeX2, eyeY2, 4, 0, Math.PI * 2); ctx.fill();
+            }
             ctx.fillStyle = '#333'; ctx.fillRect(boss.x - 10, boss.y - 30, boss.width + 20, 15);
             ctx.fillStyle = '#FF0000'; ctx.fillRect(boss.x - 10, boss.y - 30, (boss.width + 20) * (bossHealth / boss.maxHealth), 15);
+        }
+
+        function drawDrones() {
+            drones.forEach(drone => {
+                ctx.fillStyle = '#333'; ctx.beginPath(); ctx.arc(drone.x, drone.y, drone.size, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = 'red'; ctx.beginPath(); ctx.arc(drone.x, drone.y, drone.size * 0.4, 0, Math.PI * 2); ctx.fill();
+            });
         }
 
         function drawBackground() {
@@ -238,7 +262,62 @@
             ctx.fillStyle = '#228B22'; ctx.fillRect(0, canvas.height - 40, canvas.width, 10);
         }
 
+        function drawBossBackground50() {
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height); gradient.addColorStop(0, '#4a0e0e'); gradient.addColorStop(0.5, '#ff4500'); gradient.addColorStop(1, '#8b0000');
+            ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.moveTo(0, canvas.height);
+            for(let i=0; i< canvas.width; i+=50) { ctx.lineTo(i + Math.random()*20, canvas.height - 40 - Math.random()*30); }
+            ctx.lineTo(canvas.width, canvas.height); ctx.closePath(); ctx.fill();
+        }
+
+        function drawBossBackground100() {
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height); gradient.addColorStop(0, '#0f0c29'); gradient.addColorStop(0.5, '#302b63'); gradient.addColorStop(1, '#24243e');
+            ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'white';
+            stars.forEach(star => { ctx.beginPath(); ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2); ctx.fill(); });
+        }
+
         function drawUI() { scoreDisplay.textContent = score; levelDisplay.textContent = `Level ${level}`; }
+
+        function drawQTE() {
+            if (!qteState.active) return;
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)'; ctx.lineWidth = 10;
+            ctx.beginPath(); ctx.arc(qteState.x, qteState.y, qteState.outerRadius, 0, Math.PI * 2); ctx.stroke();
+            ctx.strokeStyle = qteState.feedbackTimer > 0 ? qteState.feedbackColor : 'white'; ctx.lineWidth = 15;
+            ctx.beginPath(); ctx.arc(qteState.x, qteState.y, qteState.innerRadius, 0, Math.PI * 2); ctx.stroke();
+            ctx.font = `${qteState.innerRadius * 1.5}px Bungee`;
+            ctx.fillStyle = qteState.feedbackTimer > 0 ? qteState.feedbackColor : 'white';
+            ctx.strokeStyle = 'black'; ctx.lineWidth = 8;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.strokeText(qteState.currentKey, qteState.x, qteState.y);
+            ctx.fillText(qteState.currentKey, qteState.x, qteState.y);
+        }
+
+        function updateQTE() {
+            if (!qteState.active) return;
+            qteState.outerRadius -= qteState.shrinkSpeed;
+            if (qteState.feedbackTimer > 0) qteState.feedbackTimer--;
+            if (qteState.outerRadius < qteState.innerRadius / 2) {
+                qteFails++; if(qteFails >= 2) gameOver();
+                qteState.feedbackColor = 'red'; qteState.feedbackTimer = 15;
+                generateNewQTE();
+            }
+        }
+        
+        function handleQTEInput(pressedKey) {
+            if (!qteState.active || pressedKey !== qteState.currentKey) return;
+            const successWindow = 20;
+            if (Math.abs(qteState.outerRadius - qteState.innerRadius) <= successWindow) {
+                qteSuccessCount++; qteState.feedbackColor = 'lime';
+                if (qteSuccessCount >= qteSuccessesNeeded) enterBoss100Final();
+                else generateNewQTE();
+            } else {
+                qteFails++; if(qteFails >= 2) gameOver();
+                qteState.feedbackColor = 'red';
+                generateNewQTE();
+            }
+            qteState.feedbackTimer = 15;
+        }
         
         function updateBird() {
             if (gameState === 'playing') {
@@ -248,13 +327,13 @@
                 bird.rotation = Math.min(Math.PI / 2, bird.velocity * 0.06); 
                 if (bird.y < 0) { bird.y = 0; bird.velocity = 0; }
                 if (bird.y + bird.height > canvas.height - 40) gameOver();
-            } else if (gameState === 'boss50' || gameState === 'boss100') {
+            } else if (gameState.startsWith('boss')) {
                 bird.rotation = 0; bird.velocity = 0;
                 if (keys.w) bird.y -= bird.moveSpeed; if (keys.s) bird.y += bird.moveSpeed;
                 if (keys.a) bird.x -= bird.moveSpeed; if (keys.d) bird.x += bird.moveSpeed;
                 bird.x = Math.max(0, Math.min(canvas.width - bird.width, bird.x));
                 bird.y = Math.max(0, Math.min(canvas.height - 40 - bird.height, bird.y));
-                if(keys.space) shoot();
+                if(keys.space && gameState !== 'boss100QTE') shoot();
             }
             bird.wingPosition += 0.25; if (bird.shootCooldown > 0) bird.shootCooldown--;
         }
@@ -267,7 +346,7 @@
         }
         
         function shoot() {
-            if ((gameState === 'boss50' || gameState === 'boss100') && bird.shootCooldown === 0) {
+            if (gameState.startsWith('boss') && bird.shootCooldown === 0) {
                 playerProjectiles.push({ x: bird.x + bird.width, y: bird.y + bird.height / 2, size: 8, color: '#FFFF00' });
                 bird.shootCooldown = 8;
             }
@@ -309,104 +388,146 @@
 
         function enterBoss50() {
             gameState = 'boss50'; pipes = [];
-            boss = { x: canvas.width - 200, y: canvas.height / 2 - 60, width: 120, height: 120, color: '#DC143C', maxHealth: 40, shootRate: 15 };
+            boss = { x: canvas.width - 200, y: canvas.height / 2 - 60, width: 120, height: 120, color: '#DC143C', maxHealth: 40, shootRate: 25 };
             bossHealth = boss.maxHealth;
         }
 
         function enterBoss100() {
             gameState = 'boss100'; pipes = [];
-            boss = { x: canvas.width - 250, y: canvas.height / 2 - 75, width: 150, height: 150, color: '#4B0082', maxHealth: 80, shootRate: 20, specialAttackTimer: 180 };
+            boss = { x: canvas.width - 250, y: canvas.height / 2 - 75, width: 150, height: 150, color: '#4B0082', maxHealth: 80, shootRate: 30, isEnraged: false };
             bossHealth = boss.maxHealth;
         }
+        
+        function enterBoss100QTE() {
+            gameState = 'boss100QTE'; boss.isEnraged = true;
+            bossProjectiles = []; playerProjectiles = []; qteFails = 0;
+            qteSuccessCount = 0; generateNewQTE();
+        }
 
+        function enterBoss100Final() {
+            gameState = 'boss100Final'; boss.maxHealth = 60;
+            bossHealth = boss.maxHealth; boss.shootRate = 18;
+            qteState.active = false;
+            spawnDrones();
+        }
+
+        function generateNewQTE() {
+            qteState.active = true; qteState.outerRadius = 250;
+            qteState.x = Math.random() * (canvas.width * 0.6) + (canvas.width * 0.2);
+            qteState.y = Math.random() * (canvas.height * 0.6) + (canvas.height * 0.2);
+            qteState.currentKey = qteKeys[Math.floor(Math.random() * qteKeys.length)];
+        }
+
+        function spawnDrones() {
+            drones = [];
+            const spacing = canvas.height / 4;
+            for (let i = 0; i < 3; i++) {
+                drones.push({
+                    x: canvas.width - 150, y: spacing * (i + 1), size: 20,
+                    shootTimer: 120 + i * 40, initialY: spacing * (i + 1)
+                });
+            }
+        }
+
+        function updateDrones() {
+            drones.forEach(drone => {
+                drone.y = drone.initialY + Math.sin(frames * 0.05 + drone.initialY) * 50;
+                drone.shootTimer--;
+                if(drone.shootTimer <= 0) {
+                    const angle = Math.atan2((bird.y + bird.height/2) - drone.y, (bird.x + bird.width/2) - drone.x);
+                    bossProjectiles.push({ x: drone.x, y: drone.y, size: 8, color: '#000000', speed: 6, homing: true, isMine: true });
+                    drone.shootTimer = 120;
+                }
+            });
+        }
+        
         function updateBossAndProjectiles() {
             if (!boss) return;
             boss.y += Math.sin(frames * 0.05) * 2.5;
 
-            // --- ATAQUES DOS CHEFES ---
+            if (gameState === 'boss100Final') updateDrones();
+            if ((gameState === 'boss100' || gameState === 'boss100Final') && frames % boss.shootRate === 0) {
+                const angle = Math.atan2((bird.y + bird.height / 2) - (boss.y + boss.height / 2), (bird.x + bird.width / 2) - boss.x);
+                bossProjectiles.push({ x: boss.x, y: boss.y + boss.height / 2, size: 10, color: '#8A2BE2', vx: Math.cos(angle) * 8, vy: Math.sin(angle) * 8 });
+            }
             if (gameState === 'boss50' && frames % boss.shootRate === 0) {
                 const angle = Math.atan2((bird.y + bird.height / 2) - (boss.y + boss.height / 2), (bird.x + bird.width / 2) - boss.x);
-                bossProjectiles.push({ x: boss.x, y: boss.y + boss.height / 2, size: 12, color: '#FF1493', vx: Math.cos(angle) * 12, vy: Math.sin(angle) * 12 });
-            }
-            if (gameState === 'boss100') {
-                if (frames % boss.shootRate === 0) { // Tiro normal (não teleguiado)
-                    const angle = Math.atan2((bird.y + bird.height / 2) - (boss.y + boss.height / 2), (bird.x + bird.width / 2) - boss.x);
-                    bossProjectiles.push({ x: boss.x, y: boss.y + boss.height / 2, size: 10, color: '#FF1493', vx: Math.cos(angle) * 10, vy: Math.sin(angle) * 10 });
-                }
-                boss.specialAttackTimer--;
-                if (boss.specialAttackTimer <= 0) { // Tiro especial (teleguiado e com parry)
-                    bossProjectiles.push({ x: boss.x, y: boss.y + boss.height / 2, size: 15, color: '#32CD32', speed: 9, homing: true, homingDuration: 180, reflected: false, isSpecial: true });
-                    boss.specialAttackTimer = 240;
-                }
+                bossProjectiles.push({ x: boss.x, y: boss.y + boss.height / 2, size: 12, color: '#FF1493', vx: Math.cos(angle) * 9, vy: Math.sin(angle) * 9 });
             }
             
-            // --- LÓGICA DOS PROJÉTEIS ---
-            // Colisão Jogador -> Projétil do Chefe
-            bossProjectiles.forEach(proj => {
+            bossProjectiles.forEach((proj, index) => {
                 if (proj.homing) {
                     const angle = Math.atan2((bird.y + bird.height / 2) - proj.y, (bird.x + bird.width / 2) - proj.x);
                     proj.vx = Math.cos(angle) * proj.speed; proj.vy = Math.sin(angle) * proj.speed;
-                    if (proj.homingDuration) { proj.homingDuration--; if (proj.homingDuration <= 0) proj.homing = false; }
                 }
                 proj.x += proj.vx; proj.y += proj.vy;
-                if (!proj.reflected && Math.hypot(proj.x - (bird.x + bird.width/2), proj.y - (bird.y + bird.height/2)) < proj.size + bird.width/2 - 5) gameOver();
+                if (Math.hypot(proj.x - (bird.x + bird.width/2), proj.y - (bird.y + bird.height/2)) < proj.size + bird.width/2 - 5) gameOver();
+                if(proj.x < -proj.size) bossProjectiles.splice(index, 1);
             });
 
-            // Colisão Tiro do Jogador -> Tiro do Chefe (PARRY) e Tiro do Jogador -> Chefe
             for (let i = playerProjectiles.length - 1; i >= 0; i--) {
-                let pProj = playerProjectiles[i]; pProj.x += 18;
-                let parried = false;
+                let pProj = playerProjectiles[i]; pProj.x += 18; let hitSomething = false;
                 for (let j = bossProjectiles.length - 1; j >= 0; j--) {
                     let bProj = bossProjectiles[j];
-                    if (bProj.isSpecial && !bProj.reflected && Math.hypot(pProj.x - bProj.x, pProj.y - bProj.y) < pProj.size + bProj.size) {
-                        bProj.reflected = true; bProj.homing = false;
-                        bProj.vx *= -1.5; bProj.vy *= -1.5; bProj.color = '#FF8C00'; // Laranja
-                        playerProjectiles.splice(i, 1); parried = true; break;
+                    if (bProj.isMine && Math.hypot(pProj.x - bProj.x, pProj.y - bProj.y) < pProj.size + bProj.size) {
+                        for(let k=0; k < 4; k++){
+                            const angle = (Math.PI / 4) + (k * Math.PI / 2);
+                            bossProjectiles.push({ x: bProj.x, y: bProj.y, size: 6, color: '#8A2BE2', vx: Math.cos(angle) * 8, vy: Math.sin(angle) * 8 });
+                        }
+                        bossProjectiles.splice(j, 1); playerProjectiles.splice(i, 1); hitSomething = true; break;
                     }
                 }
-                if (parried) continue;
-                if (Math.hypot(pProj.x - (boss.x + boss.width/2), pProj.y - (boss.y + boss.height/2)) < pProj.size + boss.width/2) {
+                if (hitSomething) continue;
+                if (boss && Math.hypot(pProj.x - (boss.x + boss.width/2), pProj.y - (boss.y + boss.height/2)) < pProj.size + boss.width/2) {
                     bossHealth--; playerProjectiles.splice(i, 1);
-                    if (bossHealth <= 0) bossDefeated();
-                }
-                if (pProj.x > canvas.width) playerProjectiles.splice(i, 1);
-            }
-
-            // Colisão Projétil Refletido -> Chefe
-            for (let i = bossProjectiles.length - 1; i >= 0; i--) {
-                let proj = bossProjectiles[i];
-                if (proj.reflected && Math.hypot(proj.x - (boss.x + boss.width/2), proj.y - (boss.y + boss.height/2)) < proj.size + boss.width/2) {
-                    bossHealth -= 15; // Dano massivo
-                    bossProjectiles.splice(i, 1);
-                    if (bossHealth <= 0) bossDefeated();
-                }
+                    if (bossHealth <= 0) bossHealthCheck();
+                } else if (pProj.x > canvas.width) playerProjectiles.splice(i, 1);
             }
         }
         
+        function bossHealthCheck() {
+            if (gameState === 'boss100') enterBoss100QTE();
+            else bossDefeated();
+        }
+
         function bossDefeated() {
             let defeatedBossState = gameState;
-            boss = null; bossProjectiles = []; playerProjectiles = [];
-            gameState = 'playing';
-            instructionsText.innerHTML = `ESPAÇO para pular`;
+            boss = null; bossProjectiles = []; playerProjectiles = []; drones = [];
             if (defeatedBossState === 'boss50') {
+                gameState = 'playing'; instructionsText.innerHTML = `ESPAÇO para pular`;
                 score = 50; boss50Defeated = true;
                 bird.y = canvas.height / 2; bird.x = 150;
                 bird.velocity = 0; bird.rotation = 0;
+                pipeSpeed = 16;
                 createPipe();
-            } else if (defeatedBossState === 'boss100') {
+            } else if (defeatedBossState === 'boss100Final') {
                 showGameOver(true);
+            }
+        }
+        
+        function drawMaster() {
+            if (gameState.startsWith('boss50')) drawBossBackground50();
+            else if (gameState.startsWith('boss100')) drawBossBackground100();
+            else drawBackground();
+
+            if(gameState === 'boss100QTE'){
+                updateQTE(); drawBoss(); drawDrones(); drawBird(); drawQTE(); drawUI();
+            } else {
+                drawPipes(); drawBoss(); drawDrones();
+                drawProjectiles(bossProjectiles); drawProjectiles(playerProjectiles);
+                drawBird(); drawUI();
             }
         }
 
         function gameLoop() {
             if (gameState === 'gameOver' || gameState === 'win') return;
-            ctx.clearRect(0, 0, canvas.width, canvas.height); drawBackground();
-            if (gameState === 'startScreen') { drawBird(); drawUI(); } 
-            else if (gameState === 'playing') { updateBird(); updatePipes(); } 
-            else if (gameState === 'boss50' || gameState === 'boss100') { updateBird(); updateBossAndProjectiles(); } 
-            else if (gameState === 'preBossWarning') { drawPipes(); drawBird(); }
-            drawPipes(); drawBoss(); drawProjectiles(bossProjectiles); drawProjectiles(playerProjectiles);
-            drawBird(); drawUI();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (gameState === 'playing') { updateBird(); updatePipes(); } 
+            else if (gameState.startsWith('boss')) { updateBird(); updateBossAndProjectiles(); } 
+            else if (gameState === 'preBossWarning' || gameState === 'startScreen') { updateBird(); }
+
+            drawMaster();
             frames++; requestAnimationFrame(gameLoop);
         }
 
@@ -428,7 +549,7 @@
 
         function restartGame() {
             bird.x = 150; bird.y = canvas.height / 2; bird.velocity = 0; bird.rotation = 0;
-            score = 0; level = 1; pipeSpeed = 15; pipes = [];
+            score = 0; level = 1; pipeSpeed = 15; pipes = []; drones = [];
             bossProjectiles = []; playerProjectiles = []; boss = null;
             boss50Defeated = false;
             gameState = 'playing'; frames = 0;
@@ -437,36 +558,35 @@
             createPipe(); gameLoop();
         }
         
-        function activateCheat() {
-            startScreen.style.display = 'none';
-            gameOverScreen.style.display = 'none';
-            score = 50;
-            level = 5;
-            boss50Defeated = false;
-            showBossWarning();
+        function activateCheat(bossLevel) {
+            startScreen.style.display = 'none'; gameOverScreen.style.display = 'none';
+            score = bossLevel; level = bossLevel / 10;
+            boss50Defeated = (bossLevel === 100);
             if (gameState === 'startScreen' || gameState === 'gameOver') {
-                 // Inicia o loop apenas se estiver parado para desenhar a cena de aviso
-                 gameLoop();
+                gameLoop();
             }
+            showBossWarning();
         }
 
         document.addEventListener('keydown', (e) => {
             if (gameState === 'startScreen' || gameState === 'gameOver') {
-                if (e.key === cheatCode[cheatCodePosition]) {
-                    cheatCodePosition++;
-                    if (cheatCodePosition === cheatCode.length) {
-                        activateCheat();
-                        cheatCodePosition = 0;
-                    }
-                } else {
-                    cheatCodePosition = 0;
-                }
+                if (e.key === cheatCode50[cheatCode50Position]) {
+                    cheatCode50Position++;
+                    if (cheatCode50Position === cheatCode50.length) { activateCheat(50); cheatCode50Position = 0; }
+                } else { cheatCode50Position = 0; }
+                if (e.key === cheatCode100[cheatCode100Position]) {
+                    cheatCode100Position++;
+                    if (cheatCode100Position === cheatCode100.length) { activateCheat(100); cheatCode100Position = 0; }
+                } else { cheatCode100Position = 0; }
             }
             if (e.code === 'Space') {
                 e.preventDefault(); keys.space = true;
                 if (gameState === 'startScreen') { startScreen.style.display = 'none'; startGame(); }
                 else if (gameState === 'playing') jump();
                 else if (gameState === 'preBossWarning') startBossFight();
+            }
+            if (gameState === 'boss100QTE') {
+                handleQTEInput(e.key.toUpperCase());
             }
             if (e.code === 'KeyW') keys.w = true; if (e.code === 'KeyA') keys.a = true;
             if (e.code === 'KeyS') keys.s = true; if (e.code === 'KeyD') keys.d = true;
@@ -478,6 +598,7 @@
              if (e.code === 'KeyS') keys.s = false; if (e.code === 'KeyD') keys.d = false;
         });
         
+        createStars();
         gameLoop();
     </script>
 </body>
