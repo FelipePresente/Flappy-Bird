@@ -33,7 +33,6 @@
             border-radius: 0px;
         }
 
-        /* --- UI MELHORADA --- */
         #scoreDisplay {
             position: absolute;
             top: 15px;
@@ -141,7 +140,7 @@
 <body>
     <div id="gameContainer">
         <canvas id="gameCanvas" width="1800" height="900"></canvas>
-        <div id="scoreDisplay">0</div> <!-- Apenas o número para um visual mais limpo -->
+        <div id="scoreDisplay">0</div>
         <div id="levelDisplay">Level 1</div>
         <div id="instructionsText" class="instructions">ESPAÇO para pular</div>
         
@@ -179,19 +178,15 @@
         const instructionsText = document.getElementById('instructionsText');
 
         let gameState = 'startScreen';
-        let score = 0, level = 1, pipeSpeed = 14, frames = 0, gameSpeed = 1, preBossGameSpeed = 1;
+        let score = 0, level = 1, pipeSpeed = 14, frames = 0;
         let pipes = [], bossProjectiles = [], playerProjectiles = [], boss = null, bossHealth = 0;
+        let boss50Defeated = false; // *** VARIÁVEL DE CONTROLE PARA O CHEFE ***
         const keys = { w: false, a: false, s: false, d: false, space: false };
         
-        // --- FÍSICA MAIS RÁPIDA ---
         const bird = { 
             x: 150, y: canvas.height / 2, width: 50, height: 35, 
-            velocity: 0, 
-            gravity: 0.65,      // Gravidade mais forte
-            jumpPower: -11,     // Salto mais explosivo
-            terminalVelocity: 15, // Velocidade máxima de queda
-            moveSpeed: 8,       // Movimento mais rápido no modo chefe
-            rotation: 0, wingPosition: 0, 
+            velocity: 0, gravity: 0.65, jumpPower: -11, terminalVelocity: 15, 
+            moveSpeed: 8, rotation: 0, wingPosition: 0, 
             color: '#FFD700', wingColor: '#FFA500', eyeColor: '#000', beakColor: '#FF6B35', 
             shootCooldown: 0 
         };
@@ -290,11 +285,13 @@
                 if (pipe.x + pipe.width < 0) pipes.splice(i, 1);
                 if (bird.x < pipe.x + pipe.width && bird.x + bird.width > pipe.x && (bird.y < pipe.top || bird.y + bird.height > canvas.height - pipe.bottom)) gameOver();
             }
-            if (score >= 50 && gameState === 'playing') showBossWarning();
+            // *** LÓGICA DE CHAMADA DO CHEFE CORRIGIDA ***
+            if (score >= 50 && gameState === 'playing' && !boss50Defeated) showBossWarning();
             else if (score >= 100 && gameState === 'playing') showBossWarning();
         }
 
-        function updateSpeed() { if (score % 10 === 0 && score > 0) pipeSpeed += 0.75; }
+        // *** AUMENTO DE VELOCIDADE AJUSTADO ***
+        function updateSpeed() { if (score % 10 === 0 && score > 0) pipeSpeed += 0.25; }
 
         function showBossWarning() {
             gameState = 'preBossWarning';
@@ -359,7 +356,8 @@
                 }
             }
         }
-
+        
+        // *** LÓGICA DE DERROTAR O CHEFE CORRIGIDA ***
         function bossDefeated() {
             let defeatedBossState = gameState;
             boss = null; bossProjectiles = []; playerProjectiles = [];
@@ -367,6 +365,7 @@
             instructionsText.innerHTML = `ESPAÇO para pular`;
             if (defeatedBossState === 'boss50') {
                 score = 50; 
+                boss50Defeated = true; // Marca o chefe como derrotado
                 createPipe();
             } 
             else if (defeatedBossState === 'boss100') showGameOver(true);
@@ -404,6 +403,7 @@
             bird.x = 150; bird.y = canvas.height / 2; bird.velocity = 0; bird.rotation = 0;
             score = 0; level = 1; pipeSpeed = 14; pipes = [];
             bossProjectiles = []; playerProjectiles = []; boss = null;
+            boss50Defeated = false; // *** RESETA O ESTADO DO CHEFE ***
             gameState = 'playing'; frames = 0;
             gameOverScreen.style.display = 'none'; bossWarningScreen.style.display = 'none';
             instructionsText.innerHTML = `ESPAÇO para pular`;
