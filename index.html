@@ -142,7 +142,7 @@
         .selection-container {
             margin-top: 10px;
         }
-        #characterSelection div { /* Applied flexbox to fix wrapping */
+        #characterSelection div {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
@@ -171,7 +171,7 @@
             background-color: #2a2a4a;
             font-family: 'Bungee', cursive;
             font-size: 14px;
-            margin-bottom: 5px; /* Added for better spacing */
+            margin-bottom: 5px;
         }
 
         .color-swatch:hover, .character-swatch:hover {
@@ -197,25 +197,15 @@
             <div class="selection-container" id="characterSelection">
                 <p>Escolha o personagem:</p>
                 <div>
-                    <div class="character-swatch" data-character="bird">Pássaro</div>
                     <div class="character-swatch" data-character="jacare">Jacaré</div>
                     <div class="character-swatch" data-character="tubarao">Tubarão</div>
                     <div class="character-swatch" data-character="peao">Peão</div>
                     <div class="character-swatch" data-character="cavalo-marinho">Cavalo Marinho</div>
-                    <div class="character-swatch" data-character="pantera">Pantera</div>
-                    <div class="character-swatch" data-character="leao">Leão</div>
                     <div class="character-swatch" data-character="cavalo">Cavalo</div>
                     <div class="character-swatch" data-character="sapo">Sapo</div>
+                    <div class="character-swatch" data-character="bagre">Bagre</div>
+                    <div class="character-swatch" data-character="caranguejo">Caranguejo</div>
                 </div>
-            </div>
-
-            <div class="selection-container" id="birdColorSelection">
-                <p>Escolha a cor do Pássaro:</p>
-                <div class="color-swatch" data-primary="#FFD700" data-secondary="#FFA500" data-tertiary="#FF6B35" style="background-color: #FFD700;"></div>
-                <div class="color-swatch" data-primary="#3498DB" data-secondary="#2980B9" data-tertiary="#E67E22" style="background-color: #3498DB;"></div>
-                <div class="color-swatch" data-primary="#E74C3C" data-secondary="#C0392B" data-tertiary="#F1C40F" style="background-color: #E74C3C;"></div>
-                <div class="color-swatch" data-primary="#9B59B6" data-secondary="#8E44AD" data-tertiary="#F39C12" style="background-color: #9B59B6;"></div>
-                <div class="color-swatch" data-primary="#2ECC71" data-secondary="#27AE60" data-tertiary="#E67E22" style="background-color: #2ECC71;"></div>
             </div>
 
             <div class="selection-container" id="jacareColorSelection" style="display: none;">
@@ -224,6 +214,8 @@
                 <div class="color-swatch" data-primary="#7f8c8d" data-secondary="#bdc3c7" style="background: linear-gradient(-45deg, #7f8c8d, #bdc3c7);"></div>
                 <div class="color-swatch" data-primary="#8e44ad" data-secondary="#9b59b6" style="background: linear-gradient(-45deg, #8e44ad, #9b59b6);"></div>
                 <div class="color-swatch" data-primary="#c0392b" data-secondary="#e74c3c" style="background: linear-gradient(-45deg, #c0392b, #e74c3c);"></div>
+                <div class="color-swatch" data-primary="#34495e" data-secondary="#2c3e50" style="background: linear-gradient(-45deg, #34495e, #2c3e50);"></div>
+                <div class="color-swatch" data-primary="#d35400" data-secondary="#e67e22" style="background: linear-gradient(-45deg, #d35400, #e67e22);"></div>
             </div>
 
             <div class="selection-container" id="tubaraoColorSelection" style="display: none;">
@@ -232,31 +224,26 @@
                 <div class="color-swatch" data-primary="#2980b9" data-secondary="#a9cce3" style="background: linear-gradient(-45deg, #2980b9, #a9cce3);"></div>
                 <div class="color-swatch" data-primary="#16a085" data-secondary="#a3e4d7" style="background: linear-gradient(-45deg, #16a085, #a3e4d7);"></div>
                 <div class="color-swatch" data-primary="#f39c12" data-secondary="#fdebd0" style="background: linear-gradient(-45deg, #f39c12, #fdebd0);"></div>
+                <div class="color-swatch" data-primary="#2c3e50" data-secondary="#bdc3c7" style="background: linear-gradient(-45deg, #2c3e50, #bdc3c7);"></div>
+                <div class="color-swatch" data-primary="#c0392b" data-secondary="#ecf0f1" style="background: linear-gradient(-45deg, #c0392b, #ecf0f1);"></div>
             </div>
 
             <div class="selection-container" id="peaoColorSelection" style="display: none;">
                 <p>Escolha a cor do Peão:</p>
                 <div class="color-swatch" data-primary="#ecf0f1" data-secondary="#bdc3c7" style="background: linear-gradient(-45deg, #ecf0f1, #bdc3c7);"></div>
                 <div class="color-swatch" data-primary="#2c3e50" data-secondary="#5d6d7e" style="background: linear-gradient(-45deg, #2c3e50, #5d6d7e);"></div>
+                <div class="color-swatch" data-primary="#f1c40f" data-secondary="#f39c12" style="background: linear-gradient(-45deg, #f1c40f, #f39c12);"></div>
+                <div class="color-swatch" data-primary="#2ecc71" data-secondary="#27ae60" style="background: linear-gradient(-45deg, #2ecc71, #27ae60);"></div>
+                <div class="color-swatch" data-primary="#e74c3c" data-secondary="#c0392b" style="background: linear-gradient(-45deg, #e74c3c, #c0392b);"></div>
             </div>
             
             <div class="selection-container" id="cavaloMarinhoColorSelection" style="display: none;">
                 <p>Escolha a cor do Cavalo Marinho:</p>
-                <div class="color-swatch" data-primary="#ff9800" data-secondary="#ffb74d" style="background: linear-gradient(-45deg, #ff9800, #ffb74d);"></div>
-                <div class="color-swatch" data-primary="#00bcd4" data-secondary="#80deea" style="background: linear-gradient(-45deg, #00bcd4, #80deea);"></div>
-                <div class="color-swatch" data-primary="#e91e63" data-secondary="#f06292" style="background: linear-gradient(-45deg, #e91e63, #f06292);"></div>
-            </div>
-
-            <div class="selection-container" id="panteraColorSelection" style="display: none;">
-                <p>Escolha a cor da Pantera:</p>
-                <div class="color-swatch" data-primary="#212121" data-secondary="#424242" style="background: linear-gradient(-45deg, #212121, #424242);"></div>
-                <div class="color-swatch" data-primary="#37474f" data-secondary="#546e7a" style="background: linear-gradient(-45deg, #37474f, #546e7a);"></div>
-            </div>
-
-            <div class="selection-container" id="leaoColorSelection" style="display: none;">
-                <p>Escolha a cor do Leão:</p>
-                <div class="color-swatch" data-primary="#ffb74d" data-secondary="#ffe0b2" data-tertiary="#a1887f" style="background: linear-gradient(-45deg, #ffb74d, #a1887f);"></div>
-                <div class="color-swatch" data-primary="#fbc02d" data-secondary="#fff9c4" data-tertiary="#8d6e63" style="background: linear-gradient(-45deg, #fbc02d, #8d6e63);"></div>
+                <div class="color-swatch" data-primary="#ff9800" data-secondary="#ffb74d" data-tertiary="#ffcc80" style="background: linear-gradient(-45deg, #ff9800, #ffb74d);"></div>
+                <div class="color-swatch" data-primary="#00bcd4" data-secondary="#80deea" data-tertiary="#b2ebf2" style="background: linear-gradient(-45deg, #00bcd4, #80deea);"></div>
+                <div class="color-swatch" data-primary="#e91e63" data-secondary="#f06292" data-tertiary="#f48fb1" style="background: linear-gradient(-45deg, #e91e63, #f06292);"></div>
+                <div class="color-swatch" data-primary="#8bc34a" data-secondary="#aed581" data-tertiary="#c5e1a5" style="background: linear-gradient(-45deg, #8bc34a, #aed581);"></div>
+                <div class="color-swatch" data-primary="#9c27b0" data-secondary="#ba68c8" data-tertiary="#ce93d8" style="background: linear-gradient(-45deg, #9c27b0, #ba68c8);"></div>
             </div>
 
             <div class="selection-container" id="cavaloColorSelection" style="display: none;">
@@ -264,6 +251,8 @@
                 <div class="color-swatch" data-primary="#935116" data-secondary="#fdebd0" data-tertiary="#6e2c00" style="background: linear-gradient(-45deg, #935116, #fdebd0);"></div>
                 <div class="color-swatch" data-primary="#ecf0f1" data-secondary="#bdc3c7" data-tertiary="#f1c40f" style="background: linear-gradient(-45deg, #ecf0f1, #f1c40f);"></div>
                 <div class="color-swatch" data-primary="#5d6d7e" data-secondary="#bdc3c7" data-tertiary="#ffffff" style="background: linear-gradient(-45deg, #5d6d7e, #bdc3c7);"></div>
+                <div class="color-swatch" data-primary="#2c3e50" data-secondary="#ecf0f1" data-tertiary="#95a5a6" style="background: linear-gradient(-45deg, #2c3e50, #ecf0f1);"></div>
+                <div class="color-swatch" data-primary="#c0392b" data-secondary="#f5b7b1" data-tertiary="#fdedec" style="background: linear-gradient(-45deg, #c0392b, #f5b7b1);"></div>
             </div>
             
             <div class="selection-container" id="sapoColorSelection" style="display: none;">
@@ -271,6 +260,24 @@
                 <div class="color-swatch" data-primary="#4caf50" data-secondary="#a5d6a7" style="background: linear-gradient(-45deg, #4caf50, #a5d6a7);"></div>
                 <div class="color-swatch" data-primary="#8bc34a" data-secondary="#dce775" style="background: linear-gradient(-45deg, #8bc34a, #dce775);"></div>
                 <div class="color-swatch" data-primary="#ffc107" data-secondary="#fff59d" style="background: linear-gradient(-45deg, #ffc107, #fff59d);"></div>
+                <div class="color-swatch" data-primary="#03a9f4" data-secondary="#b3e5fc" style="background: linear-gradient(-45deg, #03a9f4, #b3e5fc);"></div>
+                <div class="color-swatch" data-primary="#f44336" data-secondary="#ffcdd2" style="background: linear-gradient(-45deg, #f44336, #ffcdd2);"></div>
+            </div>
+            
+            <div class="selection-container" id="bagreColorSelection" style="display: none;">
+                <p>Escolha a cor do Bagre:</p>
+                <div class="color-swatch" data-primary="#8d6e63" data-secondary="#efebe9" style="background: linear-gradient(-45deg, #8d6e63, #efebe9);"></div>
+                <div class="color-swatch" data-primary="#607d8b" data-secondary="#cfd8dc" style="background: linear-gradient(-45deg, #607d8b, #cfd8dc);"></div>
+                <div class="color-swatch" data-primary="#fdd835" data-secondary="#fff9c4" style="background: linear-gradient(-45deg, #fdd835, #fff9c4);"></div>
+                <div class="color-swatch" data-primary="#424242" data-secondary="#e0e0e0" style="background: linear-gradient(-45deg, #424242, #e0e0e0);"></div>
+            </div>
+
+            <div class="selection-container" id="caranguejoColorSelection" style="display: none;">
+                <p>Escolha a cor do Caranguejo:</p>
+                <div class="color-swatch" data-primary="#e53935" data-secondary="#ffcdd2" style="background: linear-gradient(-45deg, #e53935, #ffcdd2);"></div>
+                <div class="color-swatch" data-primary="#1e88e5" data-secondary="#bbdefb" style="background: linear-gradient(-45deg, #1e88e5, #bbdefb);"></div>
+                <div class="color-swatch" data-primary="#fb8c00" data-secondary="#ffe0b2" style="background: linear-gradient(-45deg, #fb8c00, #ffe0b2);"></div>
+                <div class="color-swatch" data-primary="#43a047" data-secondary="#c8e6c9" style="background: linear-gradient(-45deg, #43a047, #c8e6c9);"></div>
             </div>
 
             <p style="margin-top: 15px;">Pressione <kbd>ESPAÇO</kbd> para começar!</p>
@@ -301,24 +308,23 @@
         const instructionsText = document.getElementById('instructionsText');
         
         const colorSelectionContainers = {
-            bird: document.getElementById('birdColorSelection'),
             jacare: document.getElementById('jacareColorSelection'),
             tubarao: document.getElementById('tubaraoColorSelection'),
             peao: document.getElementById('peaoColorSelection'),
             'cavalo-marinho': document.getElementById('cavaloMarinhoColorSelection'),
-            pantera: document.getElementById('panteraColorSelection'),
-            leao: document.getElementById('leaoColorSelection'),
             cavalo: document.getElementById('cavaloColorSelection'),
-            sapo: document.getElementById('sapoColorSelection')
+            sapo: document.getElementById('sapoColorSelection'),
+            bagre: document.getElementById('bagreColorSelection'),
+            caranguejo: document.getElementById('caranguejoColorSelection')
         };
 
         let gameState = 'startScreen';
         let score = 0, level = 1, pipeSpeed = 15, frames = 0;
-        let pipes = [], bossProjectiles = [], playerProjectiles = [], boss = null, bossHealth = 0, drones = [];
+        let pipes = [], bossProjectiles = [], playerProjectiles = [], boss = null, bossHealth = 0, drones = [], bubbles = [];
         let boss25Defeated = false;
         const keys = { w: false, a: false, s: false, d: false, space: false };
         const player = { x: 150, y: canvas.height / 2, width: 50, height: 35, velocity: 0, gravity: 0.65, jumpPower: -11, terminalVelocity: 15, moveSpeed: 14, rotation: 0, wingPosition: 0, primaryColor: '#FFD700', secondaryColor: '#FFA500', tertiaryColor: '#FF6B35', eyeColor: '#000', shootCooldown: 0 };
-        let playerCharacter = 'bird';
+        let playerCharacter = 'jacare';
 
         const cheatCode25 = ['ArrowUp', 'ArrowDown', 'ArrowRight', 'ArrowLeft'];
         let cheatCode25Position = 0;
@@ -343,27 +349,19 @@
             ctx.rotate(player.rotation);
             
             switch (playerCharacter) {
-                case 'jacare': drawJacare(); break;
                 case 'tubarao': drawShark(); break;
                 case 'peao': drawPawn(); break;
                 case 'cavalo-marinho': drawSeahorse(); break;
-                case 'pantera': drawPanther(); break;
-                case 'leao': drawLion(); break;
                 case 'cavalo': drawHorse(); break;
                 case 'sapo': drawFrog(); break;
-                default: drawBird(); break;
+                case 'bagre': drawCatfish(); break;
+                case 'caranguejo': drawCrab(); break;
+                default: drawJacare(); break;
             }
             
             ctx.restore();
         }
         
-        function drawBird() {
-            ctx.fillStyle = player.primaryColor; ctx.beginPath(); ctx.ellipse(0, 0, player.width / 2, player.height / 2, 0, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = player.secondaryColor; ctx.beginPath(); ctx.ellipse(-10, Math.sin(player.wingPosition) * 5, 15, 8, Math.PI / 4, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = player.eyeColor; ctx.beginPath(); ctx.arc(15, -5, 4, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = player.tertiaryColor; ctx.beginPath(); ctx.moveTo(20, 0); ctx.lineTo(30, -5); ctx.lineTo(30, 5); ctx.closePath(); ctx.fill();
-        }
-
         function drawJacare() {
             ctx.fillStyle = player.secondaryColor;
             ctx.beginPath(); ctx.moveTo(30, 2); ctx.lineTo(-10, 15); ctx.lineTo(-20, 10); ctx.closePath(); ctx.fill();
@@ -400,29 +398,87 @@
         }
 
         function drawSeahorse() {
+            ctx.save();
+            ctx.scale(0.9, 0.9);
+            const finFlap = Math.sin(player.wingPosition * 1.5) * 6;
+            ctx.fillStyle = player.tertiaryColor;
+            ctx.beginPath();
+            ctx.moveTo(-2, -5);
+            ctx.quadraticCurveTo(-15 + finFlap, -15, -5, 0);
+            ctx.quadraticCurveTo(-20 + finFlap, 10, -2, 5);
+            ctx.closePath();
+            ctx.fill();
             ctx.fillStyle = player.primaryColor;
-            ctx.beginPath(); ctx.moveTo(20, -10); ctx.quadraticCurveTo(30, -15, 25, -2); ctx.quadraticCurveTo(10, 10, 0, 10); ctx.quadraticCurveTo(-15, 10, -15, 0); ctx.quadraticCurveTo(-15, -15, 0, -15); ctx.quadraticCurveTo(10, -15, 20, -10); ctx.closePath(); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(-15, 25);
+            ctx.quadraticCurveTo(10, 35, 5, 10);
+            ctx.bezierCurveTo(20, 0, 10, -30, 25, -25);
+            ctx.quadraticCurveTo(20, -20, 15, -18);
+            ctx.bezierCurveTo(5, -10, -10, 0, -15, 25);
+            ctx.closePath();
+            ctx.fill();
             ctx.fillStyle = player.secondaryColor;
-            ctx.beginPath(); ctx.moveTo(-10, 10); ctx.quadraticCurveTo(-5, 25, 5, 20); ctx.quadraticCurveTo(0, 15, -10, 10); ctx.closePath(); ctx.fill();
-            const finFlap = Math.sin(player.wingPosition) * 5;
-            ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(-10, -15 + finFlap); ctx.lineTo(-10, -5 + finFlap); ctx.closePath(); ctx.fill();
-            ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(18, -10, 2, 0, Math.PI * 2); ctx.fill();
-        }
-        
-        function drawPanther() {
-            ctx.fillStyle = player.primaryColor;
-            ctx.beginPath(); ctx.ellipse(-5, 5, 28, 12, 0, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(20, 0, 10, 8, 0, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.moveTo(18, -8); ctx.lineTo(22, -15); ctx.lineTo(26, -7); ctx.closePath(); ctx.fill();
-            ctx.fillStyle = player.secondaryColor;
-            ctx.beginPath(); ctx.moveTo(-30, 5); ctx.quadraticCurveTo(-50, 0, -40, -10); ctx.stroke();
-            ctx.fillStyle = 'yellow'; ctx.beginPath(); ctx.arc(25, 0, 2, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(5, 10);
+            ctx.bezierCurveTo(0, 0, 5, -15, 15, -18);
+            ctx.bezierCurveTo(10, -5, 0, 5, 5, 10);
+            ctx.fill();
+            ctx.fillStyle = 'black';
+            ctx.beginPath();
+            ctx.arc(20, -22, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
         }
 
-        function drawLion() {
-            ctx.fillStyle = player.tertiaryColor;
-            ctx.beginPath(); ctx.ellipse(18, 0, 20, 20, 0, 0, Math.PI * 2); ctx.fill();
-            drawPanther();
+        function drawCatfish() {
+            const tailFlap = Math.sin(player.wingPosition) * 5;
+            ctx.fillStyle = player.secondaryColor;
+            ctx.beginPath();
+            ctx.ellipse(0, 5, 25, 10, 0, 0, Math.PI);
+            ctx.fill();
+            ctx.fillStyle = player.primaryColor;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 25, 15, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(-20, 0);
+            ctx.quadraticCurveTo(-35, 0, -25, 20 + tailFlap);
+            ctx.quadraticCurveTo(-30, 5, -20, 0);
+            ctx.fill();
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(25, 0); ctx.lineTo(35, -5); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(25, 5); ctx.lineTo(35, 10); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(15, 8); ctx.lineTo(20, 18); ctx.stroke();
+            ctx.fillStyle = 'black';
+            ctx.beginPath(); ctx.arc(18, -3, 3, 0, Math.PI * 2); ctx.fill();
+        }
+
+        function drawCrab() {
+            const legFlap = Math.sin(player.wingPosition) * 5;
+            ctx.fillStyle = player.secondaryColor;
+            for (let i = -1; i <= 1; i += 2) {
+                ctx.beginPath();
+                ctx.moveTo(i * 5, 10);
+                ctx.lineTo(i * 15, 15 + legFlap);
+                ctx.lineTo(i * 25, 10);
+                ctx.lineTo(i * 15, 5 + legFlap);
+                ctx.closePath();
+                ctx.fill();
+            }
+            ctx.fillStyle = player.primaryColor;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 25, 18, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(0, -18); ctx.lineTo(-10, -22); ctx.lineTo(-5, -18); ctx.closePath(); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(5, -18); ctx.lineTo(15, -22); ctx.lineTo(10, -18); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = player.secondaryColor;
+            ctx.beginPath();
+            ctx.moveTo(25, -5); ctx.lineTo(35, -15); ctx.lineTo(28, -8); ctx.closePath(); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(-25, -5); ctx.lineTo(-35, -15); ctx.lineTo(-28, -8); ctx.closePath(); ctx.fill();
         }
 
         function drawHorse() {
@@ -442,21 +498,64 @@
         }
 
         function drawFrog() {
+            ctx.save();
+            ctx.translate(0, 5);
+            const legFlex = Math.sin(player.wingPosition) * 5;
             ctx.fillStyle = player.primaryColor;
-            ctx.beginPath(); ctx.ellipse(0, 5, 25, 18, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(-10, 5);
+            ctx.quadraticCurveTo(-25, 25 + legFlex, -28, 10);
+            ctx.quadraticCurveTo(-20, 10, -10, 5);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(10, 8);
+            ctx.quadraticCurveTo(0, 28 + legFlex, 20, 25);
+            ctx.quadraticCurveTo(20, 15, 10, 8);
+            ctx.fill();
             ctx.fillStyle = player.secondaryColor;
-            ctx.beginPath(); ctx.ellipse(0, 8, 20, 10, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(0, 5, 22, 16, 0, 0, Math.PI * 2);
+            ctx.fill();
             ctx.fillStyle = player.primaryColor;
-            ctx.beginPath(); ctx.moveTo(-20, 10); ctx.quadraticCurveTo(-30, 25, -15, 25); ctx.closePath(); ctx.fill();
-            ctx.beginPath(); ctx.moveTo(10, 15); ctx.quadraticCurveTo(20, 28, 5, 26); ctx.closePath(); ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(5, -5, 18, 15, 0, 0, Math.PI * 2);
+            ctx.fill();
             ctx.fillStyle = 'white';
-            ctx.beginPath(); ctx.arc(-8, -8, 8, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(8, -8, 8, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(0, -10, 8, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(15, -9, 8, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = 'black';
-            ctx.beginPath(); ctx.arc(-8, -8, 4, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(8, -8, 4, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(0, -10, 4, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(15, -9, 4, 0, Math.PI*2); ctx.fill();
+            ctx.restore();
         }
 
+        function createBubble() {
+            const x = Math.random() * canvas.width;
+            const y = canvas.height;
+            const radius = Math.random() * 3 + 1;
+            const speed = Math.random() * 2 + 1;
+            bubbles.push({ x, y, radius, speed });
+        }
+
+        function updateAndDrawBubbles() {
+            if (frames % 25 === 0) createBubble();
+            for(let i = bubbles.length - 1; i >= 0; i--) {
+                let bubble = bubbles[i];
+                bubble.y -= bubble.speed;
+                bubble.x += Math.sin(bubble.y / 20) * 0.5;
+                if (bubble.y < -bubble.radius) {
+                    bubbles.splice(i, 1);
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(bubble.x, bubble.y, bubble.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                    ctx.stroke();
+                }
+            }
+        }
+        
         function drawPipes() {
             pipes.forEach(pipe => {
                 const topGradient = ctx.createLinearGradient(pipe.x, 0, pipe.x + pipe.width, 0); topGradient.addColorStop(0, '#228B22'); topGradient.addColorStop(1, '#32CD32');
@@ -516,10 +615,48 @@
                 ctx.fillStyle = 'white';
                 stars.forEach(star => { ctx.beginPath(); ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2); ctx.fill(); });
             } else {
-                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height); gradient.addColorStop(0, '#87CEEB'); gradient.addColorStop(1, '#98FB98');
-                ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#8B4513'; ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
-                ctx.fillStyle = '#228B22'; ctx.fillRect(0, canvas.height - 40, canvas.width, 10);
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#43c6ac');
+                gradient.addColorStop(1, '#191654');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgba(10, 20, 80, 0.4)';
+                const hillSpeed = 0.2;
+                for (let i = 0; i < 3; i++) {
+                    const x = (i * canvas.width * 0.7 - frames * hillSpeed) % (canvas.width * 2.1) - canvas.width * 0.7;
+                    const y = canvas.height - 200;
+                    const h = 250;
+                    const w = canvas.width * 0.8;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y + (i % 2 === 0 ? 50 : 20));
+                    ctx.quadraticCurveTo(x + w / 2, y - h, x + w, y + (i % 2 !== 0 ? 50 : 20));
+                    ctx.lineTo(x + w, canvas.height);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                updateAndDrawBubbles();
+                ctx.fillStyle = '#d2b48c';
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height);
+                const sandSpeed = 1.5;
+                for (let i = 0; i <= canvas.width; i += 20) {
+                    const waveHeight = Math.sin((i + frames * sandSpeed) * 0.02) * 10;
+                    ctx.lineTo(i, canvas.height - 60 + waveHeight);
+                }
+                ctx.lineTo(canvas.width, canvas.height);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height);
+                for (let i = 0; i <= canvas.width; i += 20) {
+                    const waveHeight = Math.sin((i + frames * sandSpeed + 10) * 0.02) * 10;
+                    ctx.lineTo(i, canvas.height - 60 + waveHeight);
+                }
+                ctx.lineTo(canvas.width, canvas.height);
+                ctx.closePath();
+                ctx.fill();
             }
         }
 
@@ -792,7 +929,7 @@
 
         function restartGame() {
             player.x = 150; player.y = canvas.height / 2; player.velocity = 0; player.rotation = 0;
-            score = 0; level = 1; pipes = []; drones = [];
+            score = 0; level = 1; pipes = []; drones = []; bubbles = [];
             bossProjectiles = []; playerProjectiles = []; boss = null;
             boss25Defeated = false;
             setSpeedFromScore();
@@ -871,7 +1008,7 @@
             });
         });
 
-        document.querySelector('.character-swatch[data-character="bird"]').click();
+        document.querySelector('.character-swatch[data-character="jacare"]').click();
         
         createStars();
         gameLoop();
