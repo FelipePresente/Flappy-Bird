@@ -60,7 +60,7 @@
             left: 50%;
             transform: translate(-50%, -50%) scale(1);
             background: radial-gradient(circle, rgba(20, 30, 70, 0.9), rgba(10, 15, 40, 0.98));
-            padding: 40px;
+            padding: 25px 40px;
             border-radius: 15px;
             text-align: center;
             color: white;
@@ -79,7 +79,8 @@
 
         .overlay h2 {
             margin-top: 0;
-            font-size: 3.5em;
+            margin-bottom: 10px;
+            font-size: 3.2em;
             font-family: 'Bungee', cursive;
             color: #ff4757;
             text-shadow: 0 0 10px #ff4757, 0 0 20px #ff4757;
@@ -88,8 +89,9 @@
 
         .overlay p {
             font-size: 1.1em;
-            line-height: 1.7;
+            line-height: 1.6;
             text-shadow: 1px 1px 2px #000;
+            margin: 10px 0;
         }
 
         .overlay kbd {
@@ -136,6 +138,50 @@
             font-size: 14px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
+
+        .selection-container {
+            margin-top: 10px;
+        }
+        #characterSelection div { /* Applied flexbox to fix wrapping */
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+        .selection-container p {
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+        .color-swatch, .character-swatch {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: inline-block;
+            cursor: pointer;
+            margin: 0 8px;
+            border: 3px solid transparent;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+            vertical-align: middle;
+        }
+        .character-swatch {
+            width: auto;
+            height: auto;
+            padding: 5px 15px;
+            border-radius: 20px;
+            background-color: #2a2a4a;
+            font-family: 'Bungee', cursive;
+            font-size: 14px;
+            margin-bottom: 5px; /* Added for better spacing */
+        }
+
+        .color-swatch:hover, .character-swatch:hover {
+            transform: scale(1.15);
+        }
+        .color-swatch.selected, .character-swatch.selected {
+            border-color: #fff;
+            box-shadow: 0 0 10px #fff;
+        }
+
     </style>
 </head>
 <body>
@@ -147,11 +193,87 @@
         
         <div class="overlay" id="startScreen" style="display: block;">
             <h2>Flappy Bird<br>Evolution</h2>
-            <p>Pressione <kbd>ESPAÇO</kbd> para começar!</p>
-            <p class="instructions" style="position: static; margin-top: 20px; font-size: 14px; text-align: left; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px;">
-                <b>Flappy Mode:</b> <kbd>ESPAÇO</kbd> para pular.<br><br>
-                <b>Boss Mode:</b> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> para mover e <kbd>ESPAÇO</kbd> para atirar.
-            </p>
+            
+            <div class="selection-container" id="characterSelection">
+                <p>Escolha o personagem:</p>
+                <div>
+                    <div class="character-swatch" data-character="bird">Pássaro</div>
+                    <div class="character-swatch" data-character="jacare">Jacaré</div>
+                    <div class="character-swatch" data-character="tubarao">Tubarão</div>
+                    <div class="character-swatch" data-character="peao">Peão</div>
+                    <div class="character-swatch" data-character="cavalo-marinho">Cavalo Marinho</div>
+                    <div class="character-swatch" data-character="pantera">Pantera</div>
+                    <div class="character-swatch" data-character="leao">Leão</div>
+                    <div class="character-swatch" data-character="cavalo">Cavalo</div>
+                    <div class="character-swatch" data-character="sapo">Sapo</div>
+                </div>
+            </div>
+
+            <div class="selection-container" id="birdColorSelection">
+                <p>Escolha a cor do Pássaro:</p>
+                <div class="color-swatch" data-primary="#FFD700" data-secondary="#FFA500" data-tertiary="#FF6B35" style="background-color: #FFD700;"></div>
+                <div class="color-swatch" data-primary="#3498DB" data-secondary="#2980B9" data-tertiary="#E67E22" style="background-color: #3498DB;"></div>
+                <div class="color-swatch" data-primary="#E74C3C" data-secondary="#C0392B" data-tertiary="#F1C40F" style="background-color: #E74C3C;"></div>
+                <div class="color-swatch" data-primary="#9B59B6" data-secondary="#8E44AD" data-tertiary="#F39C12" style="background-color: #9B59B6;"></div>
+                <div class="color-swatch" data-primary="#2ECC71" data-secondary="#27AE60" data-tertiary="#E67E22" style="background-color: #2ECC71;"></div>
+            </div>
+
+            <div class="selection-container" id="jacareColorSelection" style="display: none;">
+                <p>Escolha a cor do Jacaré:</p>
+                <div class="color-swatch" data-primary="#27ae60" data-secondary="#2ecc71" style="background: linear-gradient(-45deg, #27ae60, #2ecc71);"></div>
+                <div class="color-swatch" data-primary="#7f8c8d" data-secondary="#bdc3c7" style="background: linear-gradient(-45deg, #7f8c8d, #bdc3c7);"></div>
+                <div class="color-swatch" data-primary="#8e44ad" data-secondary="#9b59b6" style="background: linear-gradient(-45deg, #8e44ad, #9b59b6);"></div>
+                <div class="color-swatch" data-primary="#c0392b" data-secondary="#e74c3c" style="background: linear-gradient(-45deg, #c0392b, #e74c3c);"></div>
+            </div>
+
+            <div class="selection-container" id="tubaraoColorSelection" style="display: none;">
+                <p>Escolha a cor do Tubarão:</p>
+                <div class="color-swatch" data-primary="#95a5a6" data-secondary="#ecf0f1" style="background: linear-gradient(-45deg, #95a5a6, #ecf0f1);"></div>
+                <div class="color-swatch" data-primary="#2980b9" data-secondary="#a9cce3" style="background: linear-gradient(-45deg, #2980b9, #a9cce3);"></div>
+                <div class="color-swatch" data-primary="#16a085" data-secondary="#a3e4d7" style="background: linear-gradient(-45deg, #16a085, #a3e4d7);"></div>
+                <div class="color-swatch" data-primary="#f39c12" data-secondary="#fdebd0" style="background: linear-gradient(-45deg, #f39c12, #fdebd0);"></div>
+            </div>
+
+            <div class="selection-container" id="peaoColorSelection" style="display: none;">
+                <p>Escolha a cor do Peão:</p>
+                <div class="color-swatch" data-primary="#ecf0f1" data-secondary="#bdc3c7" style="background: linear-gradient(-45deg, #ecf0f1, #bdc3c7);"></div>
+                <div class="color-swatch" data-primary="#2c3e50" data-secondary="#5d6d7e" style="background: linear-gradient(-45deg, #2c3e50, #5d6d7e);"></div>
+            </div>
+            
+            <div class="selection-container" id="cavaloMarinhoColorSelection" style="display: none;">
+                <p>Escolha a cor do Cavalo Marinho:</p>
+                <div class="color-swatch" data-primary="#ff9800" data-secondary="#ffb74d" style="background: linear-gradient(-45deg, #ff9800, #ffb74d);"></div>
+                <div class="color-swatch" data-primary="#00bcd4" data-secondary="#80deea" style="background: linear-gradient(-45deg, #00bcd4, #80deea);"></div>
+                <div class="color-swatch" data-primary="#e91e63" data-secondary="#f06292" style="background: linear-gradient(-45deg, #e91e63, #f06292);"></div>
+            </div>
+
+            <div class="selection-container" id="panteraColorSelection" style="display: none;">
+                <p>Escolha a cor da Pantera:</p>
+                <div class="color-swatch" data-primary="#212121" data-secondary="#424242" style="background: linear-gradient(-45deg, #212121, #424242);"></div>
+                <div class="color-swatch" data-primary="#37474f" data-secondary="#546e7a" style="background: linear-gradient(-45deg, #37474f, #546e7a);"></div>
+            </div>
+
+            <div class="selection-container" id="leaoColorSelection" style="display: none;">
+                <p>Escolha a cor do Leão:</p>
+                <div class="color-swatch" data-primary="#ffb74d" data-secondary="#ffe0b2" data-tertiary="#a1887f" style="background: linear-gradient(-45deg, #ffb74d, #a1887f);"></div>
+                <div class="color-swatch" data-primary="#fbc02d" data-secondary="#fff9c4" data-tertiary="#8d6e63" style="background: linear-gradient(-45deg, #fbc02d, #8d6e63);"></div>
+            </div>
+
+            <div class="selection-container" id="cavaloColorSelection" style="display: none;">
+                <p>Escolha a cor do Cavalo:</p>
+                <div class="color-swatch" data-primary="#935116" data-secondary="#fdebd0" data-tertiary="#6e2c00" style="background: linear-gradient(-45deg, #935116, #fdebd0);"></div>
+                <div class="color-swatch" data-primary="#ecf0f1" data-secondary="#bdc3c7" data-tertiary="#f1c40f" style="background: linear-gradient(-45deg, #ecf0f1, #f1c40f);"></div>
+                <div class="color-swatch" data-primary="#5d6d7e" data-secondary="#bdc3c7" data-tertiary="#ffffff" style="background: linear-gradient(-45deg, #5d6d7e, #bdc3c7);"></div>
+            </div>
+            
+            <div class="selection-container" id="sapoColorSelection" style="display: none;">
+                <p>Escolha a cor do Sapo:</p>
+                <div class="color-swatch" data-primary="#4caf50" data-secondary="#a5d6a7" style="background: linear-gradient(-45deg, #4caf50, #a5d6a7);"></div>
+                <div class="color-swatch" data-primary="#8bc34a" data-secondary="#dce775" style="background: linear-gradient(-45deg, #8bc34a, #dce775);"></div>
+                <div class="color-swatch" data-primary="#ffc107" data-secondary="#fff59d" style="background: linear-gradient(-45deg, #ffc107, #fff59d);"></div>
+            </div>
+
+            <p style="margin-top: 15px;">Pressione <kbd>ESPAÇO</kbd> para começar!</p>
         </div>
 
         <div class="overlay" id="bossWarningScreen">
@@ -177,23 +299,36 @@
         const bossWarningScreen = document.getElementById('bossWarningScreen');
         const startScreen = document.getElementById('startScreen');
         const instructionsText = document.getElementById('instructionsText');
+        
+        const colorSelectionContainers = {
+            bird: document.getElementById('birdColorSelection'),
+            jacare: document.getElementById('jacareColorSelection'),
+            tubarao: document.getElementById('tubaraoColorSelection'),
+            peao: document.getElementById('peaoColorSelection'),
+            'cavalo-marinho': document.getElementById('cavaloMarinhoColorSelection'),
+            pantera: document.getElementById('panteraColorSelection'),
+            leao: document.getElementById('leaoColorSelection'),
+            cavalo: document.getElementById('cavaloColorSelection'),
+            sapo: document.getElementById('sapoColorSelection')
+        };
 
         let gameState = 'startScreen';
         let score = 0, level = 1, pipeSpeed = 15, frames = 0;
         let pipes = [], bossProjectiles = [], playerProjectiles = [], boss = null, bossHealth = 0, drones = [];
-        let boss50Defeated = false;
+        let boss25Defeated = false;
         const keys = { w: false, a: false, s: false, d: false, space: false };
-        const bird = { x: 150, y: canvas.height / 2, width: 50, height: 35, velocity: 0, gravity: 0.65, jumpPower: -11, terminalVelocity: 15, moveSpeed: 7, rotation: 0, wingPosition: 0, color: '#FFD700', wingColor: '#FFA500', eyeColor: '#000', beakColor: '#FF6B35', shootCooldown: 0 };
+        const player = { x: 150, y: canvas.height / 2, width: 50, height: 35, velocity: 0, gravity: 0.65, jumpPower: -11, terminalVelocity: 15, moveSpeed: 14, rotation: 0, wingPosition: 0, primaryColor: '#FFD700', secondaryColor: '#FFA500', tertiaryColor: '#FF6B35', eyeColor: '#000', shootCooldown: 0 };
+        let playerCharacter = 'bird';
 
-        const cheatCode50 = ['ArrowUp', 'ArrowDown', 'ArrowRight', 'ArrowLeft'];
+        const cheatCode25 = ['ArrowUp', 'ArrowDown', 'ArrowRight', 'ArrowLeft'];
+        let cheatCode25Position = 0;
+        const cheatCode50 = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
         let cheatCode50Position = 0;
-        const cheatCode100 = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
-        let cheatCode100Position = 0;
 
         const qteKeys = ['Q', 'R', 'S', 'F', 'T'];
-        let qteState = { active: false, x: 0, y: 0, outerRadius: 200, innerRadius: 50, shrinkSpeed: 2.5, currentKey: null, feedbackTimer: 0, feedbackColor: '' };
+        let qteState = { active: false, x: 0, y: 0, outerRadius: 200, innerRadius: 50, shrinkSpeed: 3.5, currentKey: null, feedbackTimer: 0, feedbackColor: '' };
         let qteSuccessesNeeded = 5, qteSuccessCount = 0, qteFails = 0;
-
+        
         let stars = [];
         function createStars() {
             stars = [];
@@ -201,14 +336,125 @@
                 stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, radius: Math.random() * 1.5 });
             }
         }
-
-        function drawBird() {
-            ctx.save(); ctx.translate(bird.x + bird.width / 2, bird.y + bird.height / 2); ctx.rotate(bird.rotation);
-            ctx.fillStyle = bird.color; ctx.beginPath(); ctx.ellipse(0, 0, bird.width / 2, bird.height / 2, 0, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = bird.wingColor; ctx.beginPath(); ctx.ellipse(-10, Math.sin(bird.wingPosition) * 5, 15, 8, Math.PI / 4, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = bird.eyeColor; ctx.beginPath(); ctx.arc(15, -5, 4, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = bird.beakColor; ctx.beginPath(); ctx.moveTo(20, 0); ctx.lineTo(30, -5); ctx.lineTo(30, 5); ctx.closePath(); ctx.fill();
+        
+        function drawPlayer() {
+            ctx.save();
+            ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
+            ctx.rotate(player.rotation);
+            
+            switch (playerCharacter) {
+                case 'jacare': drawJacare(); break;
+                case 'tubarao': drawShark(); break;
+                case 'peao': drawPawn(); break;
+                case 'cavalo-marinho': drawSeahorse(); break;
+                case 'pantera': drawPanther(); break;
+                case 'leao': drawLion(); break;
+                case 'cavalo': drawHorse(); break;
+                case 'sapo': drawFrog(); break;
+                default: drawBird(); break;
+            }
+            
             ctx.restore();
+        }
+        
+        function drawBird() {
+            ctx.fillStyle = player.primaryColor; ctx.beginPath(); ctx.ellipse(0, 0, player.width / 2, player.height / 2, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = player.secondaryColor; ctx.beginPath(); ctx.ellipse(-10, Math.sin(player.wingPosition) * 5, 15, 8, Math.PI / 4, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = player.eyeColor; ctx.beginPath(); ctx.arc(15, -5, 4, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = player.tertiaryColor; ctx.beginPath(); ctx.moveTo(20, 0); ctx.lineTo(30, -5); ctx.lineTo(30, 5); ctx.closePath(); ctx.fill();
+        }
+
+        function drawJacare() {
+            ctx.fillStyle = player.secondaryColor;
+            ctx.beginPath(); ctx.moveTo(30, 2); ctx.lineTo(-10, 15); ctx.lineTo(-20, 10); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = player.primaryColor;
+            ctx.beginPath(); ctx.moveTo(-25, 0); ctx.quadraticCurveTo(-10, -20, 10, -10); ctx.lineTo(30, 0); ctx.lineTo(-25, 10); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = 'white';
+            ctx.beginPath(); ctx.moveTo(28, 1); ctx.lineTo(25, 4); ctx.lineTo(22, 1); ctx.moveTo(20, 1); ctx.lineTo(17, 4); ctx.lineTo(14, 1); ctx.moveTo(12, 1); ctx.lineTo(9, 4); ctx.lineTo(6, 1); ctx.fill();
+            ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(10, -12, 6, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(12, -12, 3, 0, Math.PI * 2); ctx.fill();
+        }
+
+        function drawShark() {
+            ctx.fillStyle = player.secondaryColor; ctx.beginPath(); ctx.moveTo(-28, 8); ctx.quadraticCurveTo(0, 22, 30, 2); ctx.lineTo(30, 8); ctx.quadraticCurveTo(0, 15, -28, 11); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = player.primaryColor; ctx.beginPath(); ctx.moveTo(-30, 10); ctx.quadraticCurveTo(-10, -28, 32, 2); ctx.quadraticCurveTo(15, 15, -30, 10); ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = '#34495e'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(32, 2); ctx.quadraticCurveTo(20, 12, 5, 8); ctx.stroke();
+            ctx.fillStyle = 'white'; ctx.beginPath(); ctx.moveTo(20, 6); ctx.lineTo(18, 8); ctx.lineTo(16, 6); ctx.fill(); ctx.beginPath(); ctx.moveTo(14, 7); ctx.lineTo(12, 9); ctx.lineTo(10, 7); ctx.fill();
+            ctx.fillStyle = player.primaryColor; ctx.beginPath(); ctx.moveTo(0, 8); ctx.lineTo(15, 18); ctx.lineTo(18, 6); ctx.closePath(); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(-5, -18); ctx.lineTo(5, -25); ctx.lineTo(15, -12); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(24, -3, 3, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(-30, 10); ctx.lineTo(-45, -15); ctx.lineTo(-38, 8); ctx.lineTo(-45, 20); ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = player.secondaryColor; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(8, 0); ctx.quadraticCurveTo(12, 2, 8, 6); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(12, -1); ctx.quadraticCurveTo(16, 1, 12, 5); ctx.stroke();
+        }
+        
+        function drawPawn() {
+            const pawnWidth = player.width * 0.7; const pawnHeight = player.height * 1.5;
+            ctx.fillStyle = player.primaryColor;
+            ctx.beginPath(); ctx.rect(-pawnWidth / 2, pawnHeight / 2 - 10, pawnWidth, 10); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(-pawnWidth / 2, pawnHeight / 2 - 10); ctx.quadraticCurveTo(-pawnWidth / 2, 0, -pawnWidth / 4, 0); ctx.lineTo(pawnWidth / 4, 0); ctx.quadraticCurveTo(pawnWidth / 2, 0, pawnWidth / 2, pawnHeight / 2 - 10); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = player.secondaryColor;
+            ctx.beginPath(); ctx.rect(-pawnWidth/2.5, -5, pawnWidth / 1.25, 5); ctx.fill();
+            ctx.beginPath(); ctx.arc(0, -18, 12, 0, Math.PI * 2); ctx.fill();
+        }
+
+        function drawSeahorse() {
+            ctx.fillStyle = player.primaryColor;
+            ctx.beginPath(); ctx.moveTo(20, -10); ctx.quadraticCurveTo(30, -15, 25, -2); ctx.quadraticCurveTo(10, 10, 0, 10); ctx.quadraticCurveTo(-15, 10, -15, 0); ctx.quadraticCurveTo(-15, -15, 0, -15); ctx.quadraticCurveTo(10, -15, 20, -10); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = player.secondaryColor;
+            ctx.beginPath(); ctx.moveTo(-10, 10); ctx.quadraticCurveTo(-5, 25, 5, 20); ctx.quadraticCurveTo(0, 15, -10, 10); ctx.closePath(); ctx.fill();
+            const finFlap = Math.sin(player.wingPosition) * 5;
+            ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(-10, -15 + finFlap); ctx.lineTo(-10, -5 + finFlap); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(18, -10, 2, 0, Math.PI * 2); ctx.fill();
+        }
+        
+        function drawPanther() {
+            ctx.fillStyle = player.primaryColor;
+            ctx.beginPath(); ctx.ellipse(-5, 5, 28, 12, 0, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(20, 0, 10, 8, 0, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(18, -8); ctx.lineTo(22, -15); ctx.lineTo(26, -7); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = player.secondaryColor;
+            ctx.beginPath(); ctx.moveTo(-30, 5); ctx.quadraticCurveTo(-50, 0, -40, -10); ctx.stroke();
+            ctx.fillStyle = 'yellow'; ctx.beginPath(); ctx.arc(25, 0, 2, 0, Math.PI*2); ctx.fill();
+        }
+
+        function drawLion() {
+            ctx.fillStyle = player.tertiaryColor;
+            ctx.beginPath(); ctx.ellipse(18, 0, 20, 20, 0, 0, Math.PI * 2); ctx.fill();
+            drawPanther();
+        }
+
+        function drawHorse() {
+            ctx.save();
+            ctx.translate(-5, 0); 
+            ctx.fillStyle = player.tertiaryColor;
+            ctx.beginPath(); ctx.moveTo(-25, 2); ctx.quadraticCurveTo(-45, 10, -30, 20); ctx.quadraticCurveTo(-25, 10, -22, 2); ctx.fill();
+            ctx.fillStyle = player.primaryColor;
+            ctx.beginPath(); ctx.moveTo(-15, 8); ctx.lineTo(-18, 18); ctx.lineTo(-12, 18); ctx.lineTo(-10, 8); ctx.closePath(); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(-5, 0, 22, 15, -0.2, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(12, 5); ctx.lineTo(15, 15); ctx.lineTo(22, 15); ctx.lineTo(18, 5); ctx.closePath(); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(10, -10); ctx.quadraticCurveTo(15, -28, 25, -18); ctx.lineTo(30, -5); ctx.lineTo(12, 5); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = player.tertiaryColor;
+            ctx.beginPath(); ctx.moveTo(10, -12); ctx.quadraticCurveTo(20, -32, 28, -20); ctx.quadraticCurveTo(18, -18, 10, -12); ctx.fill();
+            ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(22, -12, 3, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+        }
+
+        function drawFrog() {
+            ctx.fillStyle = player.primaryColor;
+            ctx.beginPath(); ctx.ellipse(0, 5, 25, 18, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = player.secondaryColor;
+            ctx.beginPath(); ctx.ellipse(0, 8, 20, 10, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = player.primaryColor;
+            ctx.beginPath(); ctx.moveTo(-20, 10); ctx.quadraticCurveTo(-30, 25, -15, 25); ctx.closePath(); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(10, 15); ctx.quadraticCurveTo(20, 28, 5, 26); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = 'white';
+            ctx.beginPath(); ctx.arc(-8, -8, 8, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(8, -8, 8, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = 'black';
+            ctx.beginPath(); ctx.arc(-8, -8, 4, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(8, -8, 4, 0, Math.PI*2); ctx.fill();
         }
 
         function drawPipes() {
@@ -250,31 +496,31 @@
 
         function drawDrones() {
             drones.forEach(drone => {
-                ctx.fillStyle = '#333'; ctx.beginPath(); ctx.arc(drone.x, drone.y, drone.size, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = 'red'; ctx.beginPath(); ctx.arc(drone.x, drone.y, drone.size * 0.4, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#333';
+                ctx.beginPath(); ctx.arc(drone.x, drone.y, drone.size, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = 'red';
+                ctx.beginPath(); ctx.arc(drone.x, drone.y, drone.size * 0.4, 0, Math.PI * 2); ctx.fill();
             });
         }
 
         function drawBackground() {
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height); gradient.addColorStop(0, '#87CEEB'); gradient.addColorStop(1, '#98FB98');
-            ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#8B4513'; ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
-            ctx.fillStyle = '#228B22'; ctx.fillRect(0, canvas.height - 40, canvas.width, 10);
-        }
-
-        function drawBossBackground50() {
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height); gradient.addColorStop(0, '#4a0e0e'); gradient.addColorStop(0.5, '#ff4500'); gradient.addColorStop(1, '#8b0000');
-            ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.moveTo(0, canvas.height);
-            for(let i=0; i< canvas.width; i+=50) { ctx.lineTo(i + Math.random()*20, canvas.height - 40 - Math.random()*30); }
-            ctx.lineTo(canvas.width, canvas.height); ctx.closePath(); ctx.fill();
-        }
-
-        function drawBossBackground100() {
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height); gradient.addColorStop(0, '#0f0c29'); gradient.addColorStop(0.5, '#302b63'); gradient.addColorStop(1, '#24243e');
-            ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'white';
-            stars.forEach(star => { ctx.beginPath(); ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2); ctx.fill(); });
+            if (gameState === 'boss25') {
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height); gradient.addColorStop(0, '#4a0e0e'); gradient.addColorStop(0.5, '#ff4500'); gradient.addColorStop(1, '#8b0000');
+                ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.moveTo(0, canvas.height);
+                for(let i=0; i< canvas.width; i+=50) { ctx.lineTo(i + Math.random()*20, canvas.height - 40 - Math.random()*30); }
+                ctx.lineTo(canvas.width, canvas.height); ctx.closePath(); ctx.fill();
+            } else if (gameState.startsWith('boss50')) {
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height); gradient.addColorStop(0, '#0f0c29'); gradient.addColorStop(0.5, '#302b63'); gradient.addColorStop(1, '#24243e');
+                ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                stars.forEach(star => { ctx.beginPath(); ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2); ctx.fill(); });
+            } else {
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height); gradient.addColorStop(0, '#87CEEB'); gradient.addColorStop(1, '#98FB98');
+                ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#8B4513'; ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
+                ctx.fillStyle = '#228B22'; ctx.fillRect(0, canvas.height - 40, canvas.width, 10);
+            }
         }
 
         function drawUI() { scoreDisplay.textContent = score; levelDisplay.textContent = `Level ${level}`; }
@@ -309,7 +555,7 @@
             const successWindow = 20;
             if (Math.abs(qteState.outerRadius - qteState.innerRadius) <= successWindow) {
                 qteSuccessCount++; qteState.feedbackColor = 'lime';
-                if (qteSuccessCount >= qteSuccessesNeeded) enterBoss100Final();
+                if (qteSuccessCount >= qteSuccessesNeeded) enterBoss50Final();
                 else generateNewQTE();
             } else {
                 qteFails++; if(qteFails >= 2) gameOver();
@@ -321,34 +567,34 @@
         
         function updateBird() {
             if (gameState === 'playing') {
-                bird.velocity += bird.gravity;
-                if (bird.velocity > bird.terminalVelocity) bird.velocity = bird.terminalVelocity;
-                bird.y += bird.velocity;
-                bird.rotation = Math.min(Math.PI / 2, bird.velocity * 0.06); 
-                if (bird.y < 0) { bird.y = 0; bird.velocity = 0; }
-                if (bird.y + bird.height > canvas.height - 40) gameOver();
+                player.velocity += player.gravity;
+                if (player.velocity > player.terminalVelocity) player.velocity = player.terminalVelocity;
+                player.y += player.velocity;
+                player.rotation = Math.min(Math.PI / 2, player.velocity * 0.06); 
+                if (player.y < 0) { player.y = 0; player.velocity = 0; }
+                if (player.y + player.height > canvas.height - 40) gameOver();
             } else if (gameState.startsWith('boss')) {
-                bird.rotation = 0; bird.velocity = 0;
-                if (keys.w) bird.y -= bird.moveSpeed; if (keys.s) bird.y += bird.moveSpeed;
-                if (keys.a) bird.x -= bird.moveSpeed; if (keys.d) bird.x += bird.moveSpeed;
-                bird.x = Math.max(0, Math.min(canvas.width - bird.width, bird.x));
-                bird.y = Math.max(0, Math.min(canvas.height - 40 - bird.height, bird.y));
-                if(keys.space && gameState !== 'boss100QTE') shoot();
+                player.rotation = 0; player.velocity = 0;
+                if (keys.w) player.y -= player.moveSpeed; if (keys.s) player.y += player.moveSpeed;
+                if (keys.a) player.x -= player.moveSpeed; if (keys.d) player.x += player.moveSpeed;
+                player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+                player.y = Math.max(0, Math.min(canvas.height - 40 - player.height, player.y));
+                if(keys.space && gameState !== 'boss50QTE') shoot();
             }
-            bird.wingPosition += 0.25; if (bird.shootCooldown > 0) bird.shootCooldown--;
+            player.wingPosition += 0.25; if (player.shootCooldown > 0) player.shootCooldown--;
         }
 
         function jump() { 
             if (gameState === 'playing') {
-                bird.velocity = bird.jumpPower;
-                bird.rotation = -Math.PI / 3;
+                player.velocity = player.jumpPower;
+                player.rotation = -Math.PI / 3;
             }
         }
         
         function shoot() {
-            if (gameState.startsWith('boss') && bird.shootCooldown === 0) {
-                playerProjectiles.push({ x: bird.x + bird.width, y: bird.y + bird.height / 2, size: 8, color: '#FFFF00' });
-                bird.shootCooldown = 8;
+            if (gameState.startsWith('boss') && player.shootCooldown === 0) {
+                playerProjectiles.push({ x: player.x + player.width, y: player.y + player.height / 2, size: 8, color: '#FFFF00' });
+                player.shootCooldown = 8;
             }
         }
 
@@ -362,17 +608,22 @@
             if (frames % 80 === 0) createPipe();
             for (let i = pipes.length - 1; i >= 0; i--) {
                 let pipe = pipes[i]; pipe.x -= pipeSpeed;
-                if (!pipe.passed && pipe.x + pipe.width < bird.x) {
-                    score++; level = Math.floor(score / 10) + 1; pipe.passed = true; updateSpeed();
+                if (!pipe.passed && pipe.x + pipe.width < player.x) {
+                    score++; level = Math.floor(score / 10) + 1; pipe.passed = true; 
+                    setSpeedFromScore();
                 }
                 if (pipe.x + pipe.width < 0) pipes.splice(i, 1);
-                if (bird.x < pipe.x + pipe.width && bird.x + bird.width > pipe.x && (bird.y < pipe.top || bird.y + bird.height > canvas.height - pipe.bottom)) gameOver();
+                if (player.x < pipe.x + pipe.width && player.x + player.width > pipe.x && (player.y < pipe.top || player.y + player.height > canvas.height - pipe.bottom)) gameOver();
             }
-            if (score >= 50 && gameState === 'playing' && !boss50Defeated) showBossWarning();
-            else if (score >= 100 && gameState === 'playing') showBossWarning();
+            if (score >= 25 && gameState === 'playing' && !boss25Defeated) showBossWarning();
+            else if (score >= 50 && gameState === 'playing') showBossWarning();
         }
 
-        function updateSpeed() { if (score > 0 && score % 10 === 0) pipeSpeed *= 1.10; }
+        function setSpeedFromScore() {
+            const baseSpeed = 15;
+            const scoreLevel = Math.floor(score / 10);
+            pipeSpeed = baseSpeed * Math.pow(1.1, scoreLevel);
+        }
 
         function showBossWarning() {
             gameState = 'preBossWarning';
@@ -383,30 +634,30 @@
         function startBossFight() {
             if (gameState !== 'preBossWarning') return;
             bossWarningScreen.style.display = 'none';
-            if (score >= 100) enterBoss100(); else enterBoss50();
+            if (score >= 50) enterBoss50(); else enterBoss25();
+        }
+
+        function enterBoss25() {
+            gameState = 'boss25'; pipes = [];
+            boss = { x: canvas.width - 200, y: canvas.height / 2 - 60, width: 120, height: 120, color: '#DC143C', maxHealth: 40, shootRate: 15 };
+            bossHealth = boss.maxHealth;
         }
 
         function enterBoss50() {
             gameState = 'boss50'; pipes = [];
-            boss = { x: canvas.width - 200, y: canvas.height / 2 - 60, width: 120, height: 120, color: '#DC143C', maxHealth: 40, shootRate: 25 };
-            bossHealth = boss.maxHealth;
-        }
-
-        function enterBoss100() {
-            gameState = 'boss100'; pipes = [];
-            boss = { x: canvas.width - 250, y: canvas.height / 2 - 75, width: 150, height: 150, color: '#4B0082', maxHealth: 80, shootRate: 30, isEnraged: false };
+            boss = { x: canvas.width - 250, y: canvas.height / 2 - 75, width: 150, height: 150, color: '#4B0082', maxHealth: 80, shootRate: 20, isEnraged: false };
             bossHealth = boss.maxHealth;
         }
         
-        function enterBoss100QTE() {
-            gameState = 'boss100QTE'; boss.isEnraged = true;
+        function enterBoss50QTE() {
+            gameState = 'boss50QTE'; boss.isEnraged = true;
             bossProjectiles = []; playerProjectiles = []; qteFails = 0;
             qteSuccessCount = 0; generateNewQTE();
         }
 
-        function enterBoss100Final() {
-            gameState = 'boss100Final'; boss.maxHealth = 60;
-            bossHealth = boss.maxHealth; boss.shootRate = 18;
+        function enterBoss50Final() {
+            gameState = 'boss50Final'; boss.maxHealth = 60;
+            bossHealth = boss.maxHealth; boss.shootRate = 10;
             qteState.active = false;
             spawnDrones();
         }
@@ -434,8 +685,8 @@
                 drone.y = drone.initialY + Math.sin(frames * 0.05 + drone.initialY) * 50;
                 drone.shootTimer--;
                 if(drone.shootTimer <= 0) {
-                    const angle = Math.atan2((bird.y + bird.height/2) - drone.y, (bird.x + bird.width/2) - drone.x);
-                    bossProjectiles.push({ x: drone.x, y: drone.y, size: 8, color: '#000000', speed: 6, homing: true, isMine: true });
+                    const angle = Math.atan2((player.y + player.height/2) - drone.y, (player.x + player.width/2) - drone.x);
+                    bossProjectiles.push({ x: drone.x, y: drone.y, size: 8, color: '#000000', vx: Math.cos(angle) * 14, vy: Math.sin(angle) * 14, isMine: true });
                     drone.shootTimer = 120;
                 }
             });
@@ -443,25 +694,21 @@
         
         function updateBossAndProjectiles() {
             if (!boss) return;
-            boss.y += Math.sin(frames * 0.05) * 2.5;
+            boss.y += Math.sin(frames * 0.15) * 8.0;
 
-            if (gameState === 'boss100Final') updateDrones();
-            if ((gameState === 'boss100' || gameState === 'boss100Final') && frames % boss.shootRate === 0) {
-                const angle = Math.atan2((bird.y + bird.height / 2) - (boss.y + boss.height / 2), (bird.x + bird.width / 2) - boss.x);
-                bossProjectiles.push({ x: boss.x, y: boss.y + boss.height / 2, size: 10, color: '#8A2BE2', vx: Math.cos(angle) * 8, vy: Math.sin(angle) * 8 });
+            if (gameState === 'boss50Final') updateDrones();
+            if ((gameState === 'boss50' || gameState === 'boss50Final') && frames % boss.shootRate === 0) {
+                const angle = Math.atan2((player.y + player.height / 2) - (boss.y + boss.height / 2), (player.x + player.width / 2) - boss.x);
+                bossProjectiles.push({ x: boss.x, y: boss.y + boss.height / 2, size: 10, color: '#8A2BE2', vx: Math.cos(angle) * 23, vy: Math.sin(angle) * 23 });
             }
-            if (gameState === 'boss50' && frames % boss.shootRate === 0) {
-                const angle = Math.atan2((bird.y + bird.height / 2) - (boss.y + boss.height / 2), (bird.x + bird.width / 2) - boss.x);
-                bossProjectiles.push({ x: boss.x, y: boss.y + boss.height / 2, size: 12, color: '#FF1493', vx: Math.cos(angle) * 9, vy: Math.sin(angle) * 9 });
+            if (gameState === 'boss25' && frames % boss.shootRate === 0) {
+                const angle = Math.atan2((player.y + player.height / 2) - (boss.y + boss.height / 2), (player.x + player.width / 2) - boss.x);
+                bossProjectiles.push({ x: boss.x, y: boss.y + boss.height / 2, size: 12, color: '#FF1493', vx: Math.cos(angle) * 24, vy: Math.sin(angle) * 24 });
             }
             
             bossProjectiles.forEach((proj, index) => {
-                if (proj.homing) {
-                    const angle = Math.atan2((bird.y + bird.height / 2) - proj.y, (bird.x + bird.width / 2) - proj.x);
-                    proj.vx = Math.cos(angle) * proj.speed; proj.vy = Math.sin(angle) * proj.speed;
-                }
                 proj.x += proj.vx; proj.y += proj.vy;
-                if (Math.hypot(proj.x - (bird.x + bird.width/2), proj.y - (bird.y + bird.height/2)) < proj.size + bird.width/2 - 5) gameOver();
+                if (Math.hypot(proj.x - (player.x + player.width/2), proj.y - (player.y + player.height/2)) < proj.size + player.width/2 - 5) gameOver();
                 if(proj.x < -proj.size) bossProjectiles.splice(index, 1);
             });
 
@@ -486,36 +733,22 @@
         }
         
         function bossHealthCheck() {
-            if (gameState === 'boss100') enterBoss100QTE();
+            if (gameState === 'boss50') enterBoss50QTE();
             else bossDefeated();
         }
 
         function bossDefeated() {
             let defeatedBossState = gameState;
             boss = null; bossProjectiles = []; playerProjectiles = []; drones = [];
-            if (defeatedBossState === 'boss50') {
+            if (defeatedBossState === 'boss25') {
                 gameState = 'playing'; instructionsText.innerHTML = `ESPAÇO para pular`;
-                score = 50; boss50Defeated = true;
-                bird.y = canvas.height / 2; bird.x = 150;
-                bird.velocity = 0; bird.rotation = 0;
-                pipeSpeed = 16;
+                score = 25; boss25Defeated = true;
+                player.y = canvas.height / 2; player.x = 150;
+                player.velocity = 0; player.rotation = 0;
+                setSpeedFromScore();
                 createPipe();
-            } else if (defeatedBossState === 'boss100Final') {
+            } else if (defeatedBossState === 'boss50Final') {
                 showGameOver(true);
-            }
-        }
-        
-        function drawMaster() {
-            if (gameState.startsWith('boss50')) drawBossBackground50();
-            else if (gameState.startsWith('boss100')) drawBossBackground100();
-            else drawBackground();
-
-            if(gameState === 'boss100QTE'){
-                updateQTE(); drawBoss(); drawDrones(); drawBird(); drawQTE(); drawUI();
-            } else {
-                drawPipes(); drawBoss(); drawDrones();
-                drawProjectiles(bossProjectiles); drawProjectiles(playerProjectiles);
-                drawBird(); drawUI();
             }
         }
 
@@ -523,11 +756,21 @@
             if (gameState === 'gameOver' || gameState === 'win') return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            if (gameState === 'playing') { updateBird(); updatePipes(); } 
-            else if (gameState.startsWith('boss')) { updateBird(); updateBossAndProjectiles(); } 
-            else if (gameState === 'preBossWarning' || gameState === 'startScreen') { updateBird(); }
+            drawBackground();
 
-            drawMaster();
+            if (gameState === 'startScreen') { updateBird(); } 
+            else if (gameState === 'playing') { updateBird(); updatePipes(); } 
+            else if (gameState.startsWith('boss') && gameState !== 'boss50QTE') { updateBird(); updateBossAndProjectiles(); } 
+            else if (gameState === 'preBossWarning') { updateBird(); drawPipes();}
+            else if (gameState === 'boss50QTE') { updateBird(); updateQTE(); }
+
+            if(gameState === 'boss50QTE'){
+                drawBoss(); drawPlayer(); drawQTE(); drawUI();
+            } else {
+                drawPipes(); drawBoss(); drawDrones();
+                drawProjectiles(bossProjectiles); drawProjectiles(playerProjectiles);
+                drawPlayer(); drawUI();
+            }
             frames++; requestAnimationFrame(gameLoop);
         }
 
@@ -548,10 +791,11 @@
         }
 
         function restartGame() {
-            bird.x = 150; bird.y = canvas.height / 2; bird.velocity = 0; bird.rotation = 0;
-            score = 0; level = 1; pipeSpeed = 15; pipes = []; drones = [];
+            player.x = 150; player.y = canvas.height / 2; player.velocity = 0; player.rotation = 0;
+            score = 0; level = 1; pipes = []; drones = [];
             bossProjectiles = []; playerProjectiles = []; boss = null;
-            boss50Defeated = false;
+            boss25Defeated = false;
+            setSpeedFromScore();
             gameState = 'playing'; frames = 0;
             gameOverScreen.style.display = 'none'; bossWarningScreen.style.display = 'none';
             instructionsText.innerHTML = `ESPAÇO para pular`;
@@ -561,7 +805,8 @@
         function activateCheat(bossLevel) {
             startScreen.style.display = 'none'; gameOverScreen.style.display = 'none';
             score = bossLevel; level = bossLevel / 10;
-            boss50Defeated = (bossLevel === 100);
+            boss25Defeated = (bossLevel === 50);
+            setSpeedFromScore();
             if (gameState === 'startScreen' || gameState === 'gameOver') {
                 gameLoop();
             }
@@ -570,14 +815,14 @@
 
         document.addEventListener('keydown', (e) => {
             if (gameState === 'startScreen' || gameState === 'gameOver') {
+                if (e.key === cheatCode25[cheatCode25Position]) {
+                    cheatCode25Position++;
+                    if (cheatCode25Position === cheatCode25.length) { activateCheat(25); cheatCode25Position = 0; }
+                } else { cheatCode25Position = 0; }
                 if (e.key === cheatCode50[cheatCode50Position]) {
                     cheatCode50Position++;
                     if (cheatCode50Position === cheatCode50.length) { activateCheat(50); cheatCode50Position = 0; }
                 } else { cheatCode50Position = 0; }
-                if (e.key === cheatCode100[cheatCode100Position]) {
-                    cheatCode100Position++;
-                    if (cheatCode100Position === cheatCode100.length) { activateCheat(100); cheatCode100Position = 0; }
-                } else { cheatCode100Position = 0; }
             }
             if (e.code === 'Space') {
                 e.preventDefault(); keys.space = true;
@@ -585,7 +830,7 @@
                 else if (gameState === 'playing') jump();
                 else if (gameState === 'preBossWarning') startBossFight();
             }
-            if (gameState === 'boss100QTE') {
+            if (gameState === 'boss50QTE') {
                 handleQTEInput(e.key.toUpperCase());
             }
             if (e.code === 'KeyW') keys.w = true; if (e.code === 'KeyA') keys.a = true;
@@ -597,6 +842,36 @@
              if (e.code === 'KeyW') keys.w = false; if (e.code === 'KeyA') keys.a = false;
              if (e.code === 'KeyS') keys.s = false; if (e.code === 'KeyD') keys.d = false;
         });
+        
+        const characterSwatches = document.querySelectorAll('.character-swatch');
+
+        characterSwatches.forEach(swatch => {
+            swatch.addEventListener('click', () => {
+                characterSwatches.forEach(s => s.classList.remove('selected'));
+                swatch.classList.add('selected');
+                playerCharacter = swatch.dataset.character;
+
+                Object.values(colorSelectionContainers).forEach(c => c.style.display = 'none');
+                if (colorSelectionContainers[playerCharacter]) {
+                    colorSelectionContainers[playerCharacter].style.display = 'block';
+                    colorSelectionContainers[playerCharacter].querySelector('.color-swatch').click();
+                }
+            });
+        });
+
+        document.querySelectorAll('.selection-container .color-swatch').forEach(swatch => {
+            swatch.addEventListener('click', (e) => {
+                const parentContainer = e.target.closest('.selection-container');
+                parentContainer.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+                e.target.classList.add('selected');
+
+                player.primaryColor = e.target.dataset.primary || null;
+                player.secondaryColor = e.target.dataset.secondary || null;
+                player.tertiaryColor = e.target.dataset.tertiary || null;
+            });
+        });
+
+        document.querySelector('.character-swatch[data-character="bird"]').click();
         
         createStars();
         gameLoop();
