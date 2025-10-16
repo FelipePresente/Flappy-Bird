@@ -69,6 +69,7 @@
             box-shadow: 0 0 25px rgba(166, 216, 240, 0.5);
             animation: fadeIn 0.5s ease-out;
             width: 600px;
+            z-index: 10; /* Garante que o menu fique por cima de tudo */
         }
 
         @keyframes fadeIn {
@@ -178,9 +179,9 @@
         const instructionsText = document.getElementById('instructionsText');
 
         let gameState = 'startScreen';
-        let score = 0, level = 1, pipeSpeed = 14, frames = 0;
+        let score = 0, level = 1, pipeSpeed = 15, frames = 0;
         let pipes = [], bossProjectiles = [], playerProjectiles = [], boss = null, bossHealth = 0;
-        let boss50Defeated = false; // *** VARIÁVEL DE CONTROLE PARA O CHEFE ***
+        let boss50Defeated = false;
         const keys = { w: false, a: false, s: false, d: false, space: false };
         
         const bird = { 
@@ -190,6 +191,9 @@
             color: '#FFD700', wingColor: '#FFA500', eyeColor: '#000', beakColor: '#FF6B35', 
             shootCooldown: 0 
         };
+
+        const cheatCode = ['ArrowUp', 'ArrowDown', 'ArrowRight', 'ArrowLeft'];
+        let cheatCodePosition = 0;
 
         function drawBird() {
             ctx.save(); ctx.translate(bird.x + bird.width / 2, bird.y + bird.height / 2); ctx.rotate(bird.rotation);
@@ -276,7 +280,7 @@
         }
 
         function updatePipes() {
-            if (frames % 90 === 0) createPipe();
+            if (frames % 80 === 0) createPipe();
             for (let i = pipes.length - 1; i >= 0; i--) {
                 let pipe = pipes[i]; pipe.x -= pipeSpeed;
                 if (!pipe.passed && pipe.x + pipe.width < bird.x) {
@@ -285,13 +289,11 @@
                 if (pipe.x + pipe.width < 0) pipes.splice(i, 1);
                 if (bird.x < pipe.x + pipe.width && bird.x + bird.width > pipe.x && (bird.y < pipe.top || bird.y + bird.height > canvas.height - pipe.bottom)) gameOver();
             }
-            // *** LÓGICA DE CHAMADA DO CHEFE CORRIGIDA ***
             if (score >= 50 && gameState === 'playing' && !boss50Defeated) showBossWarning();
             else if (score >= 100 && gameState === 'playing') showBossWarning();
         }
 
-        // *** AUMENTO DE VELOCIDADE AJUSTADO ***
-        function updateSpeed() { if (score % 10 === 0 && score > 0) pipeSpeed += 0.25; }
+        function updateSpeed() { if (score > 0 && score % 10 === 0) pipeSpeed *= 1.10; }
 
         function showBossWarning() {
             gameState = 'preBossWarning';
@@ -302,7 +304,7 @@
         function startBossFight() {
             if (gameState !== 'preBossWarning') return;
             bossWarningScreen.style.display = 'none';
-            if (score >= 100) enterBoss100(); else if (score >= 50) enterBoss50();
+            if (score >= 100) enterBoss100(); else enterBoss50();
         }
 
         function enterBoss50() {
@@ -313,7 +315,7 @@
 
         function enterBoss100() {
             gameState = 'boss100'; pipes = [];
-            boss = { x: canvas.width - 250, y: canvas.height / 2 - 75, width: 150, height: 150, color: '#4B0082', maxHealth: 80, shootRate: 25, specialAttackTimer: 180 };
+            boss = { x: canvas.width - 250, y: canvas.height / 2 - 75, width: 150, height: 150, color: '#4B0082', maxHealth: 80, shootRate: 20, specialAttackTimer: 180 };
             bossHealth = boss.maxHealth;
         }
 
@@ -321,22 +323,25 @@
             if (!boss) return;
             boss.y += Math.sin(frames * 0.05) * 2.5;
 
+            // --- ATAQUES DOS CHEFES ---
             if (gameState === 'boss50' && frames % boss.shootRate === 0) {
                 const angle = Math.atan2((bird.y + bird.height / 2) - (boss.y + boss.height / 2), (bird.x + bird.width / 2) - boss.x);
-                bossProjectiles.push({ x: boss.x, y: boss.y + boss.height / 2, size: 12, color: '#FF1493', vx: Math.cos(angle) * 12, vy: Math.sin(angle) * 12, homing: false });
+                bossProjectiles.push({ x: boss.x, y: boss.y + boss.height / 2, size: 12, color: '#FF1493', vx: Math.cos(angle) * 12, vy: Math.sin(angle) * 12 });
             }
-            
             if (gameState === 'boss100') {
-                if (frames % boss.shootRate === 0) {
-                    bossProjectiles.push({ x: boss.x, y: boss.y + boss.height / 2, size: 10, color: '#FF1493', speed: 6, homing: true });
+                if (frames % boss.shootRate === 0) { // Tiro normal (não teleguiado)
+                    const angle = Math.atan2((bird.y + bird.height / 2) - (boss.y + boss.height / 2), (bird.x + bird.width / 2) - boss.x);
+                    bossProjectiles.push({ x: boss.x, y: boss.y + boss.height / 2, size: 10, color: '#FF1493', vx: Math.cos(angle) * 10, vy: Math.sin(angle) * 10 });
                 }
                 boss.specialAttackTimer--;
-                if (boss.specialAttackTimer <= 0) {
-                    bossProjectiles.push({ x: boss.x, y: boss.y + boss.height / 2, size: 15, color: '#32CD32', speed: 9, homing: true, homingDuration: 180 });
+                if (boss.specialAttackTimer <= 0) { // Tiro especial (teleguiado e com parry)
+                    bossProjectiles.push({ x: boss.x, y: boss.y + boss.height / 2, size: 15, color: '#32CD32', speed: 9, homing: true, homingDuration: 180, reflected: false, isSpecial: true });
                     boss.specialAttackTimer = 240;
                 }
             }
             
+            // --- LÓGICA DOS PROJÉTEIS ---
+            // Colisão Jogador -> Projétil do Chefe
             bossProjectiles.forEach(proj => {
                 if (proj.homing) {
                     const angle = Math.atan2((bird.y + bird.height / 2) - proj.y, (bird.x + bird.width / 2) - proj.x);
@@ -344,45 +349,64 @@
                     if (proj.homingDuration) { proj.homingDuration--; if (proj.homingDuration <= 0) proj.homing = false; }
                 }
                 proj.x += proj.vx; proj.y += proj.vy;
-                if (Math.hypot(proj.x - (bird.x + bird.width/2), proj.y - (bird.y + bird.height/2)) < proj.size + bird.width/2 - 5) gameOver();
+                if (!proj.reflected && Math.hypot(proj.x - (bird.x + bird.width/2), proj.y - (bird.y + bird.height/2)) < proj.size + bird.width/2 - 5) gameOver();
             });
 
+            // Colisão Tiro do Jogador -> Tiro do Chefe (PARRY) e Tiro do Jogador -> Chefe
             for (let i = playerProjectiles.length - 1; i >= 0; i--) {
-                let proj = playerProjectiles[i]; proj.x += 18;
-                if (proj.x > canvas.width) { playerProjectiles.splice(i, 1); continue; }
-                if (Math.hypot(proj.x - (boss.x + boss.width/2), proj.y - (boss.y + boss.height/2)) < proj.size + boss.width/2) {
+                let pProj = playerProjectiles[i]; pProj.x += 18;
+                let parried = false;
+                for (let j = bossProjectiles.length - 1; j >= 0; j--) {
+                    let bProj = bossProjectiles[j];
+                    if (bProj.isSpecial && !bProj.reflected && Math.hypot(pProj.x - bProj.x, pProj.y - bProj.y) < pProj.size + bProj.size) {
+                        bProj.reflected = true; bProj.homing = false;
+                        bProj.vx *= -1.5; bProj.vy *= -1.5; bProj.color = '#FF8C00'; // Laranja
+                        playerProjectiles.splice(i, 1); parried = true; break;
+                    }
+                }
+                if (parried) continue;
+                if (Math.hypot(pProj.x - (boss.x + boss.width/2), pProj.y - (boss.y + boss.height/2)) < pProj.size + boss.width/2) {
                     bossHealth--; playerProjectiles.splice(i, 1);
+                    if (bossHealth <= 0) bossDefeated();
+                }
+                if (pProj.x > canvas.width) playerProjectiles.splice(i, 1);
+            }
+
+            // Colisão Projétil Refletido -> Chefe
+            for (let i = bossProjectiles.length - 1; i >= 0; i--) {
+                let proj = bossProjectiles[i];
+                if (proj.reflected && Math.hypot(proj.x - (boss.x + boss.width/2), proj.y - (boss.y + boss.height/2)) < proj.size + boss.width/2) {
+                    bossHealth -= 15; // Dano massivo
+                    bossProjectiles.splice(i, 1);
                     if (bossHealth <= 0) bossDefeated();
                 }
             }
         }
         
-        // *** LÓGICA DE DERROTAR O CHEFE CORRIGIDA ***
         function bossDefeated() {
             let defeatedBossState = gameState;
             boss = null; bossProjectiles = []; playerProjectiles = [];
             gameState = 'playing';
             instructionsText.innerHTML = `ESPAÇO para pular`;
             if (defeatedBossState === 'boss50') {
-                score = 50; 
-                boss50Defeated = true; // Marca o chefe como derrotado
+                score = 50; boss50Defeated = true;
+                bird.y = canvas.height / 2; bird.x = 150;
+                bird.velocity = 0; bird.rotation = 0;
                 createPipe();
-            } 
-            else if (defeatedBossState === 'boss100') showGameOver(true);
+            } else if (defeatedBossState === 'boss100') {
+                showGameOver(true);
+            }
         }
 
         function gameLoop() {
             if (gameState === 'gameOver' || gameState === 'win') return;
             ctx.clearRect(0, 0, canvas.width, canvas.height); drawBackground();
-
             if (gameState === 'startScreen') { drawBird(); drawUI(); } 
             else if (gameState === 'playing') { updateBird(); updatePipes(); } 
             else if (gameState === 'boss50' || gameState === 'boss100') { updateBird(); updateBossAndProjectiles(); } 
             else if (gameState === 'preBossWarning') { drawPipes(); drawBird(); }
-
             drawPipes(); drawBoss(); drawProjectiles(bossProjectiles); drawProjectiles(playerProjectiles);
             drawBird(); drawUI();
-            
             frames++; requestAnimationFrame(gameLoop);
         }
 
@@ -391,26 +415,53 @@
             gameState = 'playing'; createPipe();
         }
 
-        function gameOver() { if (gameState === 'gameOver' || gameState === 'win') return; showGameOver(false); }
+        function gameOver() { 
+            if (gameState === 'gameOver' || gameState === 'win') return;
+            showGameOver(false);
+        }
 
         function showGameOver(isWin) {
-            gameState = isWin ? 'win' : 'gameOver'; finalScore.textContent = score;
+            gameState = 'gameOver'; finalScore.textContent = score;
             gameOverScreen.style.display = 'block';
             gameOverScreen.querySelector('h2').textContent = isWin ? 'VOCÊ VENCEU!' : 'Game Over!';
         }
 
         function restartGame() {
             bird.x = 150; bird.y = canvas.height / 2; bird.velocity = 0; bird.rotation = 0;
-            score = 0; level = 1; pipeSpeed = 14; pipes = [];
+            score = 0; level = 1; pipeSpeed = 15; pipes = [];
             bossProjectiles = []; playerProjectiles = []; boss = null;
-            boss50Defeated = false; // *** RESETA O ESTADO DO CHEFE ***
+            boss50Defeated = false;
             gameState = 'playing'; frames = 0;
             gameOverScreen.style.display = 'none'; bossWarningScreen.style.display = 'none';
             instructionsText.innerHTML = `ESPAÇO para pular`;
             createPipe(); gameLoop();
         }
+        
+        function activateCheat() {
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            score = 50;
+            level = 5;
+            boss50Defeated = false;
+            showBossWarning();
+            if (gameState === 'startScreen' || gameState === 'gameOver') {
+                 // Inicia o loop apenas se estiver parado para desenhar a cena de aviso
+                 gameLoop();
+            }
+        }
 
         document.addEventListener('keydown', (e) => {
+            if (gameState === 'startScreen' || gameState === 'gameOver') {
+                if (e.key === cheatCode[cheatCodePosition]) {
+                    cheatCodePosition++;
+                    if (cheatCodePosition === cheatCode.length) {
+                        activateCheat();
+                        cheatCodePosition = 0;
+                    }
+                } else {
+                    cheatCodePosition = 0;
+                }
+            }
             if (e.code === 'Space') {
                 e.preventDefault(); keys.space = true;
                 if (gameState === 'startScreen') { startScreen.style.display = 'none'; startGame(); }
