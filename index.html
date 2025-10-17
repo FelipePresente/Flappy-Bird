@@ -227,6 +227,7 @@
         let deathState = { active: false, timer: 0, duration: 90, rotationSpeed: 0, flashOpacity: 0 };
         let screenShake = { active: false, magnitude: 0, duration: 0, timer: 0 };
         let bossIntroState = { active: false, timer: 0, duration: 240, bossType: null, startPlayerY: 0, endPlayerY: 0 };
+        let countdownState = { active: false, timer: 180 };
 
         const cheatCode25 = ['ArrowUp', 'ArrowDown', 'ArrowRight', 'ArrowLeft'];
         let cheatCode25Position = 0;
@@ -713,6 +714,57 @@
 
         function drawUI() { scoreDisplay.textContent = score; levelDisplay.textContent = `Level ${level}`; }
 
+        function drawCountdown() {
+            if (!countdownState.active) return;
+            const count = Math.ceil(countdownState.timer / 60);
+            ctx.fillStyle = "white";
+            ctx.font = "120px 'Bungee', cursive";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 8;
+            ctx.strokeText(count, canvas.width / 2, canvas.height / 2);
+            ctx.fillText(count, canvas.width / 2, canvas.height / 2);
+        }
+
+        // MODIFICAÇÃO INICIADA: Adiciona a função para desenhar o QTE.
+        function drawQTE() {
+            if (!qteState.active) return;
+
+            ctx.save();
+            ctx.globalAlpha = 0.85;
+
+            // Desenha o círculo externo que encolhe
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.lineWidth = 10;
+            ctx.beginPath();
+            ctx.arc(qteState.x, qteState.y, qteState.outerRadius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Desenha o círculo interno (alvo)
+            let innerColor = 'rgba(255, 255, 255, 0.5)';
+            if (qteState.feedbackTimer > 0) {
+                innerColor = qteState.feedbackColor;
+            }
+            ctx.fillStyle = innerColor;
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(qteState.x, qteState.y, qteState.innerRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Desenha o texto da tecla
+            ctx.fillStyle = 'white';
+            ctx.font = "bold 60px 'Bungee', cursive";
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(qteState.currentKey, qteState.x, qteState.y);
+
+            ctx.restore();
+        }
+        // MODIFICAÇÃO FINALIZADA
+
         function updateQTE() {
             if (!qteState.active) return;
             qteState.outerRadius -= qteState.shrinkSpeed;
@@ -740,6 +792,10 @@
         }
         
         function updateBird() {
+            if (gameState === 'postBossCountdown') {
+                player.wingPosition += 0.25;
+                return;
+            }
             if(player.attackAnimation.active){
                 player.attackAnimation.frame++;
                 if(player.attackAnimation.frame >= player.attackAnimation.duration) {
@@ -855,10 +911,14 @@
             boss.alpha = 1; boss.attackState = 'idle';
         }
 
+        // MODIFICAÇÃO INICIADA: Garante que os projéteis sejam limpos para evitar morte na transição.
         function startBoss50Transition() {
             gameState = 'boss50Transition';
+            bossProjectiles = [];
+            playerProjectiles = [];
             transitionState = { active: true, timer: 0, duration: 120, onComplete: enterBoss50QTE };
         }
+        // MODIFICAÇÃO FINALIZADA
         
         function enterBoss50QTE() {
             gameState = 'boss50QTE'; boss.isEnraged = true;
@@ -1050,6 +1110,13 @@
             // --- Game State Updates ---
             if (gameState === 'bossIntro') { updateBossIntro(); } 
             updateBird(); 
+            if (gameState === 'postBossCountdown') {
+                countdownState.timer--;
+                if (countdownState.timer <= 0) {
+                    countdownState.active = false;
+                    gameState = 'playing';
+                }
+            }
             if (gameState === 'playing') { updatePipes(); }
             if (gameState.startsWith('boss')) { updateBossAndProjectiles(); } 
             if (gameState === 'boss50QTE') { updateQTE(); }
@@ -1066,14 +1133,21 @@
                 drawPlayer();
                 drawUI();
             } else if (gameState === 'bossDefeatAnimation') {
-                 // Boss defeat logic... (condensed for brevity)
                 bossDefeatState.timer++;
                 if (bossDefeatState.bossType === 'boss25') {
                     if (bossDefeatState.timer < 90) { drawBoss(); }
-                    else if (bossDefeatState.timer === 90) { boss = null; /* particle explosion */ } 
-                    else { /* draw particles */ }
+                    else if (bossDefeatState.timer === 90) { boss = null; } 
                     if (bossDefeatState.timer >= bossDefeatState.duration) {
-                        gameState = 'playing'; score = 25; boss25Defeated = true; /* reset player state */
+                        score = 25;
+                        boss25Defeated = true;
+                        bossDefeatState.active = false;
+                        player.x = 150;
+                        player.y = canvas.height / 2;
+                        player.velocity = 0;
+                        player.rotation = 0;
+                        gameState = 'postBossCountdown';
+                        countdownState.active = true;
+                        countdownState.timer = 180;
                     }
                 } else if (bossDefeatState.bossType === 'boss50') {
                     if (bossDefeatState.timer < 180) { /* boss implosion effect */ } 
@@ -1082,13 +1156,32 @@
                 }
                 drawPlayer();
             } else if (transitionState.active) {
-                // Boss 50 QTE transition...
+                transitionState.timer++;
+                const progress = transitionState.timer / transitionState.duration;
+                ctx.fillStyle = `rgba(0, 0, 0, ${Math.min(1, progress * 2)})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                if (transitionState.timer >= transitionState.duration) {
+                    if (transitionState.onComplete) {
+                        transitionState.onComplete();
+                    }
+                    transitionState.active = false;
+                    transitionState.timer = 0;
+                }
             } else {
                 drawPipes();
                 drawProjectiles(bossProjectiles);
                 drawProjectiles(playerProjectiles);
                 drawBoss();
                 drawPlayer(); 
+                if (gameState === 'postBossCountdown') {
+                    drawCountdown();
+                }
+                // MODIFICAÇÃO INICIADA: Chama a função para desenhar o QTE quando estiver ativo.
+                if (qteState.active) {
+                    drawQTE();
+                }
+                // MODIFICAÇÃO FINALIZADA
                 if (gameState !== 'bossIntro') drawUI();
             }
             
@@ -1133,6 +1226,7 @@
             boss = null; boss25Defeated = false;
             setSpeedFromScore(); gameFrames = 0;
             cheatCode25Position = 0; cheatCode50Position = 0;
+            countdownState.active = false;
             gameOverScreen.style.display = 'none';
             scoreDisplay.style.opacity = 1;
             levelDisplay.style.opacity = 1;
