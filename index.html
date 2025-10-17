@@ -171,7 +171,7 @@
                 <p>Escolha a cor do Sapo:</p>
                 <div class="color-swatch" data-primary="#4caf50" data-secondary="#a5d6a7" style="background: linear-gradient(-45deg, #4caf50, #a5d6a7);"></div>
                 <div class="color-swatch" data-primary="#8bc34a" data-secondary="#dce775" style="background: linear-gradient(-45deg, #8bc34a, #dce775);"></div>
-                <div class="color-swatch" data-primary="#ffc107" data-secondary="#fff59d" style="background: linear-gradient(-45deg, #ffc107, #fff59d);"></div>
+                <div class="color-swatch" data-primary="#ffc107" data-secondary="#fff59d" style="background: linear-gradient(-45deg, #ffc107, #fff9c4);"></div>
                 <div class="color-swatch" data-primary="#03a9f4" data-secondary="#b3e5fc" style="background: linear-gradient(-45deg, #03a9f4, #b3e5fc);"></div>
                 <div class="color-swatch" data-primary="#f44336" data-secondary="#ffcdd2" style="background: linear-gradient(-45deg, #f44336, #ffcdd2);"></div>
             </div>
@@ -216,14 +216,16 @@
 
         let gameState = 'startScreen';
         let score = 0, level = 1, pipeSpeed = 15, frames = 0, animationFrameId, gameFrames = 0, gameSpeed = 1.0;
-        let pipes = [], bossProjectiles = [], playerProjectiles = [], boss = null, bossHealth = 0, particles = [];
+        let pipes = [], bossProjectiles = [], playerProjectiles = [], particles = [];
+        let boss = null, bossHealth = 0;
+        let boss2 = null, boss2Health = 0;
         let boss25Defeated = false;
         const keys = { w: false, a: false, s: false, d: false, space: false };
         const player = { x: 150, y: canvas.height / 2, width: 50, height: 35, velocity: 0, gravity: 0.65, jumpPower: -11, terminalVelocity: 15, moveSpeed: 17, rotation: 0, wingPosition: 0, primaryColor: '#FFD700', secondaryColor: '#FFA500', tertiaryColor: '#FF6B35', eyeColor: '#000', shootCooldown: 0, attackAnimation: { active: false, frame: 0, duration: 15 } };
         let playerCharacter = 'jacare';
 
         let transitionState = { active: false, timer: 0, duration: 0, onComplete: null };
-        let bossDefeatState = { active: false, timer: 0, duration: 0, bossType: null, particles: [] };
+        let bossDefeatState = { active: false, timer: 0, duration: 0, bossType: null, particles: [], flash: false };
         let deathState = { active: false, timer: 0, duration: 90, rotationSpeed: 0, flashOpacity: 0 };
         let screenShake = { active: false, magnitude: 0, duration: 0, timer: 0 };
         let bossIntroState = { active: false, timer: 0, duration: 240, bossType: null, startPlayerY: 0, endPlayerY: 0 };
@@ -235,7 +237,7 @@
         let cheatCode50Position = 0;
 
         const qteKeys = ['Q', 'R', 'S', 'F', 'T'];
-        let qteState = { active: false, x: 0, y: 0, outerRadius: 200, innerRadius: 50, shrinkSpeed: 3.5, currentKey: null, feedbackTimer: 0, feedbackColor: '' };
+        let qteState = { active: false, x: 0, y: 0, outerRadius: 200, innerRadius: 50, shrinkSpeed: 4.5, currentKey: null, feedbackTimer: 0, feedbackColor: '', onComplete: null };
         let qteSuccessesNeeded = 5, qteSuccessCount = 0, qteFails = 0;
         
         function createParticles(count, type) {
@@ -512,11 +514,11 @@
             });
         }
         
-        function drawBoss() {
-            if (!boss) return;
+        function drawBoss(instance, health, maxHealth, transitionProgress, chaosFactor, isDashing) {
+            if (!instance) return;
             
             ctx.save();
-            ctx.globalAlpha = boss.alpha;
+            ctx.globalAlpha = instance.alpha;
 
             let scale = 1.0;
             if (gameState === 'bossIntro') {
@@ -524,38 +526,32 @@
                 scale = 0.5 + progress * 0.5;
             }
             
-            ctx.translate(boss.x + boss.width / 2, boss.y + boss.height / 2);
+            ctx.translate(instance.x + instance.width / 2, instance.y + instance.height / 2);
             ctx.scale(scale, scale);
-
-            if (boss.attackState === 'attacking') {
-                 // Trail effect logic here if needed
-            }
+            if (instance.rotation) ctx.rotate(instance.rotation);
 
             if (bossIntroState.bossType === 'boss25' || gameState === 'boss25' || (gameState === 'bossDefeatAnimation' && bossDefeatState.bossType === 'boss25')) {
                 drawAbyssalAngler();
             } else if (bossIntroState.bossType === 'boss50' || gameState.startsWith('boss50') || (gameState === 'bossDefeatAnimation' && bossDefeatState.bossType === 'boss50')) {
-                drawElderKraken(false);
+                drawElderKraken(false, instance, transitionProgress, chaosFactor, isDashing);
             }
 
             ctx.restore(); 
             ctx.globalAlpha = 1.0;
-
-            if (boss.attackState === 'telegraphing') { /* Telegraphing logic */ }
             
-            // Draw Health Bar
-            if (gameState.startsWith('boss') || gameState === 'bossIntro') {
-                let currentHealth = bossHealth;
+            if ((gameState.startsWith('boss') && !gameState.includes('Transition')) || gameState === 'bossIntro') {
+                let currentHealth = health;
                 let healthBarOpacity = 1;
                 
                 if(gameState === 'bossIntro') {
                     const healthFillProgress = Math.min(1, Math.max(0, (bossIntroState.timer - 150) / 60));
-                    currentHealth = healthFillProgress * boss.maxHealth;
+                    currentHealth = healthFillProgress * maxHealth;
                     healthBarOpacity = Math.min(1, Math.max(0, (bossIntroState.timer - 120) / 60));
                 }
                 
                 ctx.globalAlpha = healthBarOpacity;
-                ctx.fillStyle = '#333'; ctx.fillRect(boss.x - 10, boss.y - 40, boss.width + 20, 15);
-                ctx.fillStyle = boss.isEnraged ? '#FFA500' : '#FF0000'; ctx.fillRect(boss.x - 10, boss.y - 40, (boss.width + 20) * (currentHealth / boss.maxHealth), 15);
+                ctx.fillStyle = '#333'; ctx.fillRect(instance.x - 10, instance.y - 40, instance.width + 20, 15);
+                ctx.fillStyle = instance.isEnraged ? '#FFA500' : '#FF0000'; ctx.fillRect(instance.x - 10, instance.y - 40, (instance.width + 20) * (currentHealth / maxHealth), 15);
                 ctx.globalAlpha = 1;
             }
         }
@@ -565,12 +561,15 @@
             const attackProgress = boss.attackAnimation.active ? boss.attackAnimation.frame / boss.attackAnimation.duration : 0;
             const attackGlow = Math.sin(attackProgress * Math.PI);
             const lureX = -90; const lureY = -110 + bodyBob;
+
             ctx.strokeStyle = '#5a3a2e'; ctx.lineWidth = 8;
             ctx.beginPath(); ctx.moveTo(-30, -70); ctx.quadraticCurveTo(-60, -160 + Math.sin(gameFrames * 0.1) * 10, lureX, lureY); ctx.stroke();
+            
             ctx.fillStyle = `rgba(255, 255, 180, 0.8)`;
             ctx.shadowColor = 'yellow'; ctx.shadowBlur = 30 + attackGlow * 20;
             ctx.beginPath(); ctx.arc(lureX, lureY, 25, 0, Math.PI*2); ctx.fill();
             ctx.shadowBlur = 0;
+            
             const bodyGradient = ctx.createRadialGradient(0, 0, 50, 0, 0, 150);
             bodyGradient.addColorStop(0, '#4a3d37'); bodyGradient.addColorStop(1, '#2c1e1a');
             ctx.fillStyle = bodyGradient;
@@ -578,67 +577,102 @@
             ctx.moveTo(-80, -50); ctx.quadraticCurveTo(-120, 0, -80, 50);
             ctx.lineTo(90, 90); ctx.quadraticCurveTo(120, 0, 90, -90);
             ctx.closePath(); ctx.fill();
+            
             ctx.fillStyle = `rgba(0, 255, 255, ${0.4 + Math.sin(gameFrames * 0.08) * 0.3})`;
             const spots = [[20, -30], [50, 0], [30, 40], [-10, 60]];
             spots.forEach(spot => {
                 ctx.beginPath(); ctx.arc(spot[0], spot[1] + bodyBob, 8, 0, Math.PI*2); ctx.fill();
             });
+
+            const finSway = Math.sin(gameFrames * 0.04) * 5;
             ctx.fillStyle = '#3a2d27';
-            ctx.beginPath(); ctx.moveTo(60, 85); ctx.lineTo(30, 110); ctx.lineTo(0, 80); ctx.closePath(); ctx.fill();
-            ctx.beginPath(); ctx.moveTo(60, -85); ctx.lineTo(30, -110); ctx.lineTo(0, -80); ctx.closePath(); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(60 + finSway, 85); ctx.lineTo(30 + finSway, 110); ctx.lineTo(0 + finSway, 80); ctx.closePath(); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(60 - finSway, -85); ctx.lineTo(30 - finSway, -110); ctx.lineTo(0 - finSway, -80); ctx.closePath(); ctx.fill();
+            
             ctx.fillStyle = '#1a0e0a';
             ctx.beginPath(); ctx.arc(-70, 0, 70 + attackGlow * 15, Math.PI * 1.7, Math.PI * 0.3); ctx.closePath(); ctx.fill();
+            
             ctx.fillStyle = '#f0f0f0';
             for(let i = 0; i < 7; i++) {
                 const angle = Math.PI * 1.75 + (i * 0.1);
                 ctx.beginPath(); ctx.moveTo(-70 + Math.cos(angle) * 60, Math.sin(angle) * 60); ctx.lineTo(-70 + Math.cos(angle) * (80 + (i%2)*10), Math.sin(angle) * (80 + (i%2)*10)); ctx.lineTo(-75 + Math.cos(angle) * 60, Math.sin(angle) * 60 + 5); ctx.closePath(); ctx.fill();
             }
+            
             ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(-50, -45 + bodyBob, 20, 0, Math.PI*2); ctx.fill();
             const eyeGradient = ctx.createRadialGradient(-55, -42 + bodyBob, 1, -50, -45 + bodyBob, 15);
             eyeGradient.addColorStop(0, `rgba(255, 0, 0, 1)`); eyeGradient.addColorStop(1, `rgba(100, 0, 0, 1)`);
             ctx.fillStyle = eyeGradient; ctx.beginPath(); ctx.arc(-50, -45 + bodyBob, 15, 0, Math.PI*2); ctx.fill();
         }
 
-        function drawElderKraken(isTrail) {
+        function drawElderKraken(isTrail, instance, transitionProgress, chaosFactor = 0, isDashing = false) {
             const hover = Math.sin(gameFrames * 0.08) * 15;
-            const attackProgress = boss.attackAnimation.active ? boss.attackAnimation.frame / boss.attackAnimation.duration : 0;
+            const attackProgress = instance.attackAnimation.active ? instance.attackAnimation.frame / instance.attackAnimation.duration : 0;
             const attackGlow = Math.sin(attackProgress * Math.PI);
-            const mainColor = isTrail ? `rgba(12, 42, 76, 0.5)` : (boss.isEnraged ? '#7b241c' : '#1a5276');
-            const accentColor = isTrail ? `rgba(25, 101, 155, 0.5)` : (boss.isEnraged ? '#e74c3c' : '#3498db');
+            const mainColor = isTrail ? `rgba(12, 42, 76, 0.5)` : (instance.isEnraged ? '#7b241c' : '#1a5276');
+            const accentColor = isTrail ? `rgba(25, 101, 155, 0.5)` : (instance.isEnraged ? '#e74c3c' : '#3498db');
+            
             ctx.strokeStyle = accentColor; ctx.lineWidth = isTrail ? 10 : 18;
             ctx.fillStyle = mainColor;
             for(let i=0; i < 8; i++) {
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
                 let angle = i * Math.PI / 4 + (gameFrames * 0.01);
-                let c1x = Math.cos(angle) * 120 + Math.sin(gameFrames*0.05 + i) * 40;
-                let c1y = Math.sin(angle) * 120 + Math.cos(gameFrames*0.05 + i) * 40;
-                let c2x = Math.cos(angle) * 180 + Math.cos(gameFrames*0.06 + i) * 60;
-                let c2y = Math.sin(angle) * 180 + Math.sin(gameFrames*0.06 + i) * 60;
-                let ex = Math.cos(angle) * 250 + Math.sin(gameFrames*0.07 + i) * 80;
-                let ey = Math.sin(angle) * 250 + Math.cos(gameFrames*0.07 + i) * 80;
+                let c1x = Math.cos(angle) * 120 + Math.sin(gameFrames*0.05 + i) * (40 * (1 + chaosFactor));
+                let c1y = Math.sin(angle) * 120 + Math.cos(gameFrames*0.05 + i) * (40 * (1 + chaosFactor));
+                let c2x = Math.cos(angle) * 180 + Math.cos(gameFrames*0.06 + i) * (60 * (1 + chaosFactor));
+                let c2y = Math.sin(angle) * 180 + Math.sin(gameFrames*0.06 + i) * (60 * (1 + chaosFactor));
+                let ex = Math.cos(angle) * 250 + Math.sin(gameFrames*0.07 + i) * (80 * (1 + chaosFactor));
+                let ey = Math.sin(angle) * 250 + Math.cos(gameFrames*0.07 + i) * (80 * (1 + chaosFactor));
                 ctx.bezierCurveTo(c1x, c1y, c2x, c2y, ex, ey);
                 ctx.stroke();
             }
+
+            ctx.save();
+            const bodyPulseY = 1 + Math.sin(gameFrames * 0.1) * 0.05;
+            const bodyPulseX = 1 / bodyPulseY;
+            ctx.scale(bodyPulseX, bodyPulseY);
+
+            if (isDashing) {
+                ctx.scale(1.5, 0.6);
+            }
+
             const headGradient = ctx.createRadialGradient(0, hover, 10, 0, hover, 120);
             headGradient.addColorStop(0, accentColor); headGradient.addColorStop(1, mainColor);
             ctx.fillStyle = headGradient;
             ctx.beginPath(); ctx.moveTo(0, -120 + hover); ctx.quadraticCurveTo(120, hover, 0, 120 + hover); ctx.quadraticCurveTo(-120, hover, 0, -120 + hover); ctx.closePath(); ctx.fill();
-            if(boss.isEnraged && !isTrail) {
+            
+            if(instance.isEnraged && !isTrail) {
                 ctx.strokeStyle = 'red'; ctx.lineWidth = 3;
                 ctx.beginPath(); ctx.moveTo(0, -110+hover); ctx.quadraticCurveTo(30, -50+hover, 0, 0); ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(0, -110+hover); ctx.quadraticCurveTo(-30, -50+hover, 0, 0); ctx.stroke();
             }
-            if (isTrail) return;
+            if (isTrail) { ctx.restore(); return; }
+
             ctx.fillStyle = mainColor; ctx.beginPath(); ctx.arc(0, hover, 70, 0, Math.PI*2); ctx.fill();
-            const irisRadius = boss.isEnraged ? 60 - attackGlow * 20 : 50;
-            const irisColor = boss.isEnraged ? 'yellow' : '#00ffff';
+            
+            if (transitionProgress !== undefined) {
+                const pulse = Math.sin(transitionProgress * Math.PI * 4); 
+                const glowRadius = 80 + pulse * 40;
+                const glowOpacity = Math.max(0, 0.5 + pulse * 0.5);
+                ctx.fillStyle = `rgba(255, 255, 0, ${glowOpacity})`;
+                ctx.shadowColor = 'yellow';
+                ctx.shadowBlur = 40;
+                ctx.beginPath();
+                ctx.arc(0, hover, glowRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            const irisRadius = instance.isEnraged ? 60 - attackGlow * 20 : 50;
+            const irisColor = instance.isEnraged ? 'yellow' : '#00ffff';
             const irisGradient = ctx.createRadialGradient(0, hover, 5, 0, hover, irisRadius);
             irisGradient.addColorStop(0, 'white'); irisGradient.addColorStop(0.5, irisColor); irisGradient.addColorStop(1, 'black');
             ctx.fillStyle = irisGradient; ctx.shadowColor = irisColor; ctx.shadowBlur = 30 + attackGlow * 20;
             ctx.beginPath(); ctx.arc(0, hover, irisRadius, 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = 'black'; ctx.beginPath(); ctx.ellipse(0, hover, 15, 30, 0, 0, Math.PI*2); ctx.fill();
             ctx.shadowBlur = 0;
+
+            ctx.restore();
         }
 
         function drawBackground() {
@@ -669,7 +703,7 @@
                     ctx.stroke();
                 }
 
-            } else if (bgKey.includes('boss50') || bgKey === 'boss50Transition') {
+            } else if (bgKey.includes('boss50')) {
                 ctx.fillStyle = '#000210'; ctx.fillRect(0,0,canvas.width, canvas.height);
                 ctx.save();
                 ctx.translate(canvas.width/2, canvas.height/2);
@@ -727,21 +761,18 @@
             ctx.fillText(count, canvas.width / 2, canvas.height / 2);
         }
 
-        // MODIFICAÇÃO INICIADA: Adiciona a função para desenhar o QTE.
         function drawQTE() {
             if (!qteState.active) return;
 
             ctx.save();
             ctx.globalAlpha = 0.85;
 
-            // Desenha o círculo externo que encolhe
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
             ctx.lineWidth = 10;
             ctx.beginPath();
             ctx.arc(qteState.x, qteState.y, qteState.outerRadius, 0, Math.PI * 2);
             ctx.stroke();
 
-            // Desenha o círculo interno (alvo)
             let innerColor = 'rgba(255, 255, 255, 0.5)';
             if (qteState.feedbackTimer > 0) {
                 innerColor = qteState.feedbackColor;
@@ -754,7 +785,6 @@
             ctx.fill();
             ctx.stroke();
 
-            // Desenha o texto da tecla
             ctx.fillStyle = 'white';
             ctx.font = "bold 60px 'Bungee', cursive";
             ctx.textAlign = 'center';
@@ -763,30 +793,70 @@
 
             ctx.restore();
         }
-        // MODIFICAÇÃO FINALIZADA
+
+        function drawBossTelegraph() {
+            if (!boss || boss.attackState !== 'telegraphing' || !boss.dashPath) return;
+
+            const { start, control, end } = boss.dashPath;
+
+            ctx.save();
+            ctx.setLineDash([15, 10]);
+            ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(start.x + boss.width/2, start.y + boss.height/2);
+            ctx.quadraticCurveTo(control.x, control.y, end.x, end.y);
+            ctx.stroke();
+            ctx.restore();
+
+            const pulse = Math.sin(gameFrames * 0.2) * 10;
+            ctx.strokeStyle = 'rgba(255, 0, 0, 0.9)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(end.x, end.y, 50 + pulse, 0, Math.PI * 2);
+            ctx.stroke();
+        }
 
         function updateQTE() {
             if (!qteState.active) return;
             qteState.outerRadius -= qteState.shrinkSpeed;
             if (qteState.feedbackTimer > 0) qteState.feedbackTimer--;
             if (qteState.outerRadius < qteState.innerRadius / 2) {
-                qteFails++; if(qteFails >= 2) gameOver();
-                qteState.feedbackColor = 'red'; qteState.feedbackTimer = 15;
-                generateNewQTE();
+                qteFails++; 
+                qteState.feedbackColor = 'red'; 
+                qteState.feedbackTimer = 15;
+                if(qteFails >= 2) {
+                    gameOver();
+                } else {
+                    generateNewQTE();
+                }
             }
         }
         
         function handleQTEInput(pressedKey) {
-            if (!qteState.active || pressedKey !== qteState.currentKey) return;
-            const successWindow = 20;
-            if (Math.abs(qteState.outerRadius - qteState.innerRadius) <= successWindow) {
-                qteSuccessCount++; qteState.feedbackColor = 'lime';
-                if (qteSuccessCount >= qteSuccessesNeeded) enterBoss50Final();
-                else generateNewQTE();
+            if (!qteState.active) return;
+
+            const isCorrectKey = (pressedKey === qteState.currentKey);
+            const isInTime = (Math.abs(qteState.outerRadius - qteState.innerRadius) <= 20);
+
+            if (isCorrectKey && isInTime) {
+                qteSuccessCount++;
+                qteState.feedbackColor = 'lime';
+                if (qteSuccessCount >= qteSuccessesNeeded) {
+                    if(qteState.onComplete) {
+                        qteState.onComplete();
+                    }
+                } else {
+                    generateNewQTE();
+                }
             } else {
-                qteFails++; if(qteFails >= 2) gameOver();
+                qteFails++;
                 qteState.feedbackColor = 'red';
-                generateNewQTE();
+                if (qteFails >= 2) {
+                    gameOver();
+                } else {
+                    generateNewQTE();
+                }
             }
             qteState.feedbackTimer = 15;
         }
@@ -813,11 +883,13 @@
                 if (player.y + player.height > canvas.height - 40) gameOver();
             } else if (gameState.startsWith('boss') && !isFrozen) {
                 player.rotation = 0; player.velocity = 0;
-                if (keys.w) player.y -= player.moveSpeed; if (keys.s) player.y += player.moveSpeed;
-                if (keys.a) player.x -= player.moveSpeed; if (keys.d) player.x += player.moveSpeed;
+                if (keys.w) player.y -= player.moveSpeed;
+                if (keys.s) player.y += player.moveSpeed;
+                if (keys.a) player.x -= player.moveSpeed;
+                if (keys.d) player.x += player.moveSpeed;
                 player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
                 player.y = Math.max(0, Math.min(canvas.height - 40 - player.height, player.y));
-                if(keys.space && gameState !== 'boss50QTE' && gameState !== 'boss50Transition') shoot();
+                if(keys.space && !gameState.includes('Transition') && gameState !== 'boss50QTE') shoot();
             } else if(isFrozen) {
                 const progress = bossIntroState.timer / bossIntroState.duration;
                 player.y = bossIntroState.startPlayerY + (bossIntroState.endPlayerY - bossIntroState.startPlayerY) * progress;
@@ -886,17 +958,17 @@
             instructionsText.innerHTML = `W, A, S, D para mover • ESPAÇO para atirar`;
             
             if (type === 'boss25') {
-                 boss = { x: canvas.width - 250, y: canvas.height / 2 - 80, width: 200, height: 200, maxHealth: 40, shootRate: 35, alpha: 0, attackAnimation: { active: false, frame: 0, duration: 25 }, attackState: 'intro' };
+                 boss = { x: canvas.width, y: canvas.height / 2 - 80, width: 200, height: 200, maxHealth: 40, shootRate: 18, alpha: 0, attackAnimation: { active: false, frame: 0, duration: 25 }, attackState: 'intro', rotation: 0 };
                  bossHealth = boss.maxHealth;
             } else {
-                 boss = { x: canvas.width - 280, y: canvas.height / 2 - 90, width: 200, height: 200, maxHealth: 80, shootRate: 30, isEnraged: false, alpha: 0, attackAnimation: { active: false, frame: 0, duration: 30 }, attackState: 'intro' };
+                 boss = { x: canvas.width, y: canvas.height / 2 - 90, width: 200, height: 200, maxHealth: 80, shootRate: 16, isEnraged: false, alpha: 0, attackAnimation: { active: false, frame: 0, duration: 30 }, attackState: 'intro', rotation: 0 };
                  bossHealth = boss.maxHealth;
             }
         }
 
         function startBossFight(type) {
             if (type === 'boss25') enterBoss25();
-            else if (type === 'boss50') enterBoss50();
+            else if (type === 'boss50') enterBoss50Phase1();
         }
 
         function enterBoss25() {
@@ -905,33 +977,85 @@
             boss.alpha = 1; boss.attackState = 'idle';
         }
 
-        function enterBoss50() {
-            gameState = 'boss50'; pipes = [];
+        function enterBoss50Phase1() {
+            gameState = 'boss50Phase1'; pipes = [];
             createParticles(150, 'abyss_particle');
             boss.alpha = 1; boss.attackState = 'idle';
         }
 
-        // MODIFICAÇÃO INICIADA: Garante que os projéteis sejam limpos para evitar morte na transição.
-        function startBoss50Transition() {
-            gameState = 'boss50Transition';
+        function startBoss50QTE1Transition() {
+            gameState = 'boss50QTETransition';
             bossProjectiles = [];
             playerProjectiles = [];
-            transitionState = { active: true, timer: 0, duration: 120, onComplete: enterBoss50QTE };
-        }
-        // MODIFICAÇÃO FINALIZADA
-        
-        function enterBoss50QTE() {
-            gameState = 'boss50QTE'; boss.isEnraged = true;
-            bossProjectiles = []; playerProjectiles = []; qteFails = 0;
-            qteSuccessCount = 0; generateNewQTE();
+            transitionState = { active: true, timer: 0, duration: 90, onComplete: () => enterBoss50QTE(enterBoss50Phase2) };
         }
 
-        function enterBoss50Final() {
-            gameState = 'boss50Final'; boss.maxHealth = 60;
-            bossHealth = boss.maxHealth; boss.shootRate = 20;
-            const originalPos = { x: canvas.width - 280, y: canvas.height / 2 - 90 };
-            boss = { ...boss, originalPos, attackState: 'idle', attackTimer: 180, attackTelegraph: {}, alpha: 1 };
+        function enterBoss50Phase2() {
             qteState.active = false;
+            gameState = 'boss50Phase2Transition';
+            transitionState = {
+                active: true,
+                timer: 0,
+                duration: 90, 
+                onComplete: () => {
+                    gameState = 'boss50Phase2';
+                    boss.maxHealth = 80;
+                    bossHealth = boss.maxHealth;
+                    boss.isEnraged = true;
+                    boss2 = null; 
+                    boss2Health = 0;
+                    boss.shootRate = 12;
+                    const originalPos = { x: canvas.width - 280, y: canvas.height / 2 - 90 };
+                    boss = { ...boss, originalPos, attackState: 'idle', attackTimer: 180, attackTelegraph: {}, alpha: 1, history: [] };
+                }
+            };
+        }
+        
+        function startBoss50QTE2Transition() {
+            gameState = 'boss50QTETransition';
+            bossProjectiles = [];
+            playerProjectiles = [];
+            transitionState = { active: true, timer: 0, duration: 90, onComplete: () => enterBoss50QTE(enterBoss50Phase3) };
+        }
+        
+        function enterBoss50Phase3() {
+            qteState.active = false;
+            gameState = 'boss50Phase3Transition'; 
+            boss.x = canvas.width - 280; 
+            boss.y = canvas.height/2 - boss.height/2;
+            boss2 = {...boss, alpha: 0}; 
+            boss2Health = 0; 
+
+            transitionState = { 
+                active: true, 
+                timer: 0, 
+                duration: 180, 
+                onComplete: () => {
+                    gameState = 'boss50Phase3';
+                    boss.maxHealth = 60;
+                    bossHealth = boss.maxHealth;
+                    boss.y = canvas.height * 0.25 - boss.height / 2;
+                    boss.attackState = 'advancing';
+                    boss.attackAnimation = { active: false, frame: 0, duration: 30 };
+
+                    boss2.maxHealth = 60;
+                    boss2Health = boss2.maxHealth;
+                    boss2.y = canvas.height * 0.75 - boss2.height / 2;
+                    boss2.attackState = 'advancing';
+                }
+            };
+        }
+
+        function enterBoss50QTE(onCompleteCallback) {
+            gameState = 'boss50QTE'; 
+            boss.isEnraged = true; 
+            boss2 = null;
+            bossProjectiles = []; 
+            playerProjectiles = []; 
+            qteFails = 0;
+            qteSuccessCount = 0; 
+            qteState.onComplete = onCompleteCallback;
+            generateNewQTE();
         }
 
         function generateNewQTE() {
@@ -955,17 +1079,50 @@
             screenShake.timer = 0;
         }
         
+        function getBezierPoint(t, p0, p1, p2) {
+            const cx = (1 - t) * (1 - t) * p0.x + 2 * (1 - t) * t * p1.x + t * t * p2.x;
+            const cy = (1 - t) * (1 - t) * p0.y + 2 * (1 - t) * t * p1.y + t * t * p2.y;
+            return { x: cx, y: cy };
+        }
+        
         function updateBossAndProjectiles() {
-            if (!boss || bossHealth <= 0 || boss.attackState === 'intro') return;
-            if(boss.attackAnimation.active) {
+            if (!boss || (bossHealth <= 0 && (!boss2 || boss2Health <= 0))) return;
+
+            if(boss && boss.attackAnimation.active) {
                 boss.attackAnimation.frame++;
                 if(boss.attackAnimation.frame >= boss.attackAnimation.duration) boss.attackAnimation.active = false;
             }
-            if(boss.attackState !== 'attacking') boss.y += Math.sin(gameFrames * 0.1) * 2.0;
+            if(boss2 && boss2.attackAnimation.active) {
+                boss2.attackAnimation.frame++;
+                if(boss2.attackAnimation.frame >= boss2.attackAnimation.duration) boss2.attackAnimation.active = false;
+            }
 
             const projectileSpeed = 28;
 
-            if(gameState === 'boss50Final') {
+            if (gameState === 'boss50Phase3') {
+                const advanceSpeed = 0.4;
+                if (bossHealth > 0) {
+                    boss.x -= advanceSpeed;
+                    boss.y += Math.sin(gameFrames * 0.05 + Math.PI) * 1.5;
+                    if (gameFrames % (boss.shootRate * 2) === 0) {
+                        boss.attackAnimation.active = true; boss.attackAnimation.frame = 0;
+                        const angle = Math.atan2((player.y + player.height / 2) - (boss.y + boss.height / 2), (player.x + player.width / 2) - boss.x);
+                        bossProjectiles.push({ x: boss.x, y: boss.y + boss.height / 2, size: 12, color: '#FF4500', vx: Math.cos(angle) * 20, vy: Math.sin(angle) * 20 });
+                    }
+                    if (boss.x < -boss.width) gameOver();
+                }
+                if (boss2 && boss2Health > 0) {
+                    boss2.x -= advanceSpeed;
+                    boss2.y += Math.cos(gameFrames * 0.05) * 1.5;
+                    if (gameFrames % (boss2.shootRate * 2) === 0) {
+                        boss2.attackAnimation.active = true; boss2.attackAnimation.frame = 0;
+                        const angle = Math.atan2((player.y + player.height / 2) - (boss2.y + boss2.height / 2), (player.x + player.width / 2) - boss2.x);
+                        bossProjectiles.push({ x: boss2.x, y: boss2.y + boss2.height / 2, size: 12, color: '#FF4500', vx: Math.cos(angle) * 20, vy: Math.sin(angle) * 20 });
+                    }
+                    if (boss2.x < -boss2.width) gameOver();
+                }
+
+            } else if (gameState === 'boss50Phase2') {
                 boss.attackTimer--;
                 switch (boss.attackState) {
                     case 'idle':
@@ -983,34 +1140,57 @@
                             const targetPos = { x: player.x + player.width / 2, y: player.y + player.height / 2 };
                             const side = Math.floor(Math.random() * 4);
                             let startPos = {};
-                            if (side === 0) startPos = { x: -boss.width, y: Math.random() * canvas.height };
-                            else if (side === 1) startPos = { x: canvas.width, y: Math.random() * canvas.height };
-                            else if (side === 2) startPos = { x: Math.random() * canvas.width, y: -boss.height };
-                            else startPos = { x: Math.random() * canvas.width, y: canvas.height };
-                            boss.x = startPos.x; boss.y = startPos.y;
-                            const angle = Math.atan2(targetPos.y - (startPos.y + boss.height/2), targetPos.x - (startPos.x + boss.width/2));
-                            const dashSpeed = 40;
-                            boss.attackVelocity = { x: Math.cos(angle) * dashSpeed, y: Math.sin(angle) * dashSpeed };
-                            boss.attackTelegraph = { x: targetPos.x, y: targetPos.y, radius: 100, timer: 0 };
+                            if (side === 0) startPos = { x: -boss.width, y: Math.random() * canvas.height }; else if (side === 1) startPos = { x: canvas.width, y: Math.random() * canvas.height }; else if (side === 2) startPos = { x: Math.random() * canvas.width, y: -boss.height }; else startPos = { x: Math.random() * canvas.width, y: canvas.height };
+                            const midX = (startPos.x + targetPos.x) / 2; const midY = (startPos.y + targetPos.y) / 2;
+                            const angleToMid = Math.atan2(midY - startPos.y, midX - startPos.x); const curveAmount = 250 * (Math.random() > 0.5 ? 1 : -1);
+                            const controlPoint = { x: midX + Math.cos(angleToMid + Math.PI / 2) * curveAmount, y: midY + Math.sin(angleToMid + Math.PI / 2) * curveAmount };
+                            boss.dashPath = { start: startPos, control: controlPoint, end: targetPos }; boss.dashProgress = 0; boss.history = [];
                             boss.attackState = 'telegraphing'; boss.attackTimer = 70;
                         }
                         break;
                     case 'telegraphing': if (boss.attackTimer <= 0) { boss.attackState = 'reappearing'; boss.attackTimer = 10; } break;
                     case 'reappearing': boss.alpha += 1 / 10; if (boss.alpha >= 1) { boss.alpha = 1; boss.attackState = 'attacking'; boss.attackTimer = 80; } break;
                     case 'attacking':
-                        boss.x += boss.attackVelocity.x; boss.y += boss.attackVelocity.y;
+                        if (boss.dashProgress < 1) {
+                            const playerCenter = { x: player.x + player.width/2, y: player.y + player.height/2 };
+                            const dx = playerCenter.x - boss.dashPath.control.x;
+                            const dy = playerCenter.y - boss.dashPath.control.y;
+                            boss.dashPath.control.x += dx * 0.03;
+                            boss.dashPath.control.y += dy * 0.03;
+
+                            boss.dashProgress += 0.025;
+                            const pos = getBezierPoint(boss.dashProgress, boss.dashPath.start, boss.dashPath.control, boss.dashPath.end);
+                            
+                            if (boss.history.length > 0) {
+                                const lastPos = boss.history[boss.history.length-1];
+                                boss.rotation = Math.atan2(pos.y - lastPos.y, pos.x - lastPos.x);
+                            }
+                            boss.x = pos.x - boss.width/2;
+                            boss.y = pos.y - boss.height/2;
+
+                            boss.history.push({ x: pos.x, y: pos.y, rotation: boss.rotation });
+                            if (boss.history.length > 15) boss.history.shift();
+                        }
                         const bossHitbox = { x: boss.x, y: boss.y, width: boss.width, height: boss.height };
                         if (checkRectCollision(player, bossHitbox)) gameOver();
-                        if (boss.attackTimer <= 0 || boss.x < -boss.width || boss.x > canvas.width || boss.y < -boss.height || boss.y > canvas.height) {
+
+                        if (boss.dashProgress >= 1) {
+                            const numProjectiles = 12;
+                            for (let i = 0; i < numProjectiles; i++) {
+                                const angle = (i / numProjectiles) * Math.PI * 2;
+                                bossProjectiles.push({
+                                    x: boss.x + boss.width / 2, y: boss.y + boss.height / 2, size: 10, color: '#e74c3c',
+                                    vx: Math.cos(angle) * 15, vy: Math.sin(angle) * 15
+                                });
+                            }
+                            triggerScreenShake(15, 20);
                             boss.attackState = 'fading_after_attack'; boss.attackTimer = 30;
                         }
                         break;
-                    case 'fading_after_attack': boss.alpha -= 1 / 30; if (boss.alpha <= 0) { boss.alpha = 0; boss.x = boss.originalPos.x; boss.y = boss.originalPos.y; boss.attackState = 'returning'; boss.attackTimer = 15; } break;
+                    case 'fading_after_attack': boss.alpha -= 1 / 30; if (boss.alpha <= 0) { boss.alpha = 0; boss.x = boss.originalPos.x; boss.y = boss.originalPos.y; boss.rotation = 0; boss.attackState = 'returning'; boss.attackTimer = 15; } break;
                     case 'returning': boss.alpha += 1 / 15; if (boss.alpha >= 1) { boss.alpha = 1; boss.attackState = 'idle'; boss.attackTimer = 180; } break;
                 }
-            }
-            
-            if (gameState === 'boss25' || gameState === 'boss50') {
+            } else if (gameState === 'boss25' || gameState === 'boss50Phase1') {
                  if (gameFrames % boss.shootRate === 0) {
                     boss.attackAnimation.active = true; boss.attackAnimation.frame = 0;
                     const angle = Math.atan2((player.y + player.height / 2) - (boss.y + boss.height / 2), (player.x + player.width / 2) - boss.x);
@@ -1028,38 +1208,66 @@
 
             for (let i = playerProjectiles.length - 1; i >= 0; i--) {
                 let pProj = playerProjectiles[i]; pProj.x += 18;
-                const bossHitbox = { x: boss.x, y: boss.y, width: boss.width, height: boss.height };
-                const projHitbox = { x: pProj.x - pProj.size, y: pProj.y - pProj.size, width: pProj.size*2, height: pProj.size*2 };
 
-                if (boss.alpha > 0.5 && checkRectCollision(projHitbox, bossHitbox)) {
-                    bossHealth--;
-                    playerProjectiles.splice(i, 1);
-                    if (bossHealth <= 0) bossHealthCheck(gameState);
-                } else if (pProj.x > canvas.width) {
+                if (boss && bossHealth > 0) {
+                    const bossHitbox = { x: boss.x, y: boss.y, width: boss.width, height: boss.height };
+                    const projHitbox = { x: pProj.x - pProj.size, y: pProj.y - pProj.size, width: pProj.size*2, height: pProj.size*2 };
+                    if (boss.alpha > 0.5 && checkRectCollision(projHitbox, bossHitbox)) {
+                        bossHealth--;
+                        playerProjectiles.splice(i, 1);
+                        if (bossHealth <= 0) bossHealthCheck(gameState);
+                        continue;
+                    }
+                }
+
+                if (boss2 && boss2Health > 0 && gameState === 'boss50Phase3') {
+                    const boss2Hitbox = { x: boss2.x, y: boss2.y, width: boss2.width, height: boss2.height };
+                     const projHitbox = { x: pProj.x - pProj.size, y: pProj.y - pProj.size, width: pProj.size*2, height: pProj.size*2 };
+                    if (boss2.alpha > 0.5 && checkRectCollision(projHitbox, boss2Hitbox)) {
+                        boss2Health--;
+                        playerProjectiles.splice(i, 1);
+                        if (boss2Health <= 0) bossHealthCheck(gameState);
+                        continue;
+                    }
+                }
+                
+                if (pProj.x > canvas.width) {
                     playerProjectiles.splice(i, 1);
                 }
             }
         }
         
         function bossHealthCheck(currentState) {
-            if (currentState === 'boss50' && bossHealth <= 0) startBoss50Transition();
-            else if (bossHealth <= 0) bossDefeated(currentState);
+            if (currentState === 'boss50Phase1' && bossHealth <= 0) {
+                startBoss50QTE1Transition();
+            } else if (currentState === 'boss50Phase2' && bossHealth <= 0) {
+                startBoss50QTE2Transition();
+            } else if (currentState === 'boss50Phase3' && bossHealth <= 0 && boss2Health <= 0) {
+                bossDefeated('boss50Phase3');
+            } else if (currentState === 'boss25' && bossHealth <= 0) {
+                bossDefeated(currentState);
+            }
         }
 
         function bossDefeated(defeatedBossState) {
+            bossProjectiles = []; 
+            playerProjectiles = [];
+            
             gameState = 'bossDefeatAnimation';
-            bossProjectiles = []; playerProjectiles = [];
             bossDefeatState.active = true;
             bossDefeatState.timer = 0;
             bossDefeatState.particles = [];
+            bossDefeatState.lastBossPos = { x: boss.x, y: boss.y };
+            bossDefeatState.flash = false;
 
             if (defeatedBossState === 'boss25') {
                 bossDefeatState.bossType = 'boss25';
                 bossDefeatState.duration = 180;
-                triggerScreenShake(15, 90);
-            } else if (defeatedBossState === 'boss50Final') {
+                triggerScreenShake(15, 60);
+            } else if (defeatedBossState === 'boss50Phase3') {
                 bossDefeatState.bossType = 'boss50';
                 bossDefeatState.duration = 240;
+                triggerScreenShake(25, 240);
             }
         }
 
@@ -1081,7 +1289,19 @@
         
         function updateBossIntro() {
             bossIntroState.timer++;
-            gameSpeed = 0.2 + (bossIntroState.timer / bossIntroState.duration) * 0.8;
+            const progress = bossIntroState.timer / bossIntroState.duration;
+            gameSpeed = 0.2 + progress * 0.8;
+
+            if (boss) {
+                const easeOutProgress = 1 - Math.pow(1 - progress, 3);
+                boss.x = canvas.width - (boss.width + 100) * easeOutProgress;
+                if (bossIntroState.timer > 30) {
+                   boss.alpha = Math.min(1, (bossIntroState.timer - 30) / 120);
+                }
+                if (bossIntroState.timer === 150) {
+                    triggerScreenShake(10, 30);
+                }
+            }
 
             if (bossIntroState.timer >= bossIntroState.duration) {
                 bossIntroState.active = false;
@@ -1107,7 +1327,6 @@
                 if (screenShake.timer >= screenShake.duration) screenShake.active = false;
             }
 
-            // --- Game State Updates ---
             if (gameState === 'bossIntro') { updateBossIntro(); } 
             updateBird(); 
             if (gameState === 'postBossCountdown') {
@@ -1118,70 +1337,239 @@
                 }
             }
             if (gameState === 'playing') { updatePipes(); }
-            if (gameState.startsWith('boss')) { updateBossAndProjectiles(); } 
+            if (gameState.startsWith('boss') && !gameState.includes('Transition')) { updateBossAndProjectiles(); } 
             if (gameState === 'boss50QTE') { updateQTE(); }
 
-            // --- Drawing Logic ---
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawBackground();
 
             if (gameState === 'deathAnimation') {
                 updateDeathAnimation();
                 drawPipes();
-                drawProjectiles(bossProjectiles);
-                drawBoss();
+                drawBoss(boss, bossHealth, boss?.maxHealth);
                 drawPlayer();
                 drawUI();
             } else if (gameState === 'bossDefeatAnimation') {
                 bossDefeatState.timer++;
+                drawBackground(); 
+
                 if (bossDefeatState.bossType === 'boss25') {
-                    if (bossDefeatState.timer < 90) { drawBoss(); }
-                    else if (bossDefeatState.timer === 90) { boss = null; } 
-                    if (bossDefeatState.timer >= bossDefeatState.duration) {
-                        score = 25;
-                        boss25Defeated = true;
-                        bossDefeatState.active = false;
-                        player.x = 150;
-                        player.y = canvas.height / 2;
-                        player.velocity = 0;
-                        player.rotation = 0;
+                    const timer = bossDefeatState.timer;
+                    const duration = bossDefeatState.duration;
+                    if (timer < 60) { 
+                        if (boss) {
+                            boss.x += 2;
+                            boss.y += (Math.random() - 0.5) * 15;
+                            boss.rotation = (Math.random() - 0.5) * 0.3;
+                            drawBoss(boss, 0, boss.maxHealth);
+                        }
+                    } else if (timer === 60) {
+                        bossDefeatState.flash = true;
+                        for(let i = 0; i < 250; i++) {
+                            const angle = Math.random() * Math.PI * 2;
+                            const speed = Math.random() * 12 + 4;
+                            bossDefeatState.particles.push({
+                                x: bossDefeatState.lastBossPos.x + boss.width/2, y: bossDefeatState.lastBossPos.y + boss.height/2,
+                                vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                                radius: Math.random() * 6 + 2, alpha: 1,
+                                decay: Math.random() * 0.01 + 0.015
+                            });
+                        }
+                        boss = null;
+                    } else {
+                        if (bossDefeatState.flash) {
+                           ctx.fillStyle = `rgba(255, 255, 255, ${1 - (timer-60)/30})`;
+                           ctx.fillRect(0, 0, canvas.width, canvas.height);
+                           if (timer >= 90) bossDefeatState.flash = false;
+                        }
+
+                        bossDefeatState.particles.forEach((p, i) => {
+                            p.x += p.vx; p.y += p.vy; p.vy += 0.2; p.alpha -= p.decay;
+                            if (p.alpha <= 0) bossDefeatState.particles.splice(i, 1);
+                            else {
+                                ctx.fillStyle = `rgba(255, ${100 + Math.random() * 155}, 0, ${p.alpha})`;
+                                ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2); ctx.fill();
+                            }
+                        });
+                    }
+                    if (timer >= duration) {
+                        score = 25; boss25Defeated = true; bossDefeatState.active = false;
+                        player.x = 150; player.y = canvas.height / 2;
+                        player.velocity = 0; player.rotation = 0;
                         gameState = 'postBossCountdown';
                         countdownState.active = true;
                         countdownState.timer = 180;
                     }
                 } else if (bossDefeatState.bossType === 'boss50') {
-                    if (bossDefeatState.timer < 180) { /* boss implosion effect */ } 
-                    else { /* screen fades to white */ }
-                    if (bossDefeatState.timer >= bossDefeatState.duration) { showGameOver(true); }
+                    const timer = bossDefeatState.timer;
+                    const duration = bossDefeatState.duration;
+                    if (timer < 120) {
+                        const chaosFactor = (timer / 120) * 2;
+                        if(boss) drawBoss(boss, 0, boss.maxHealth, undefined, chaosFactor);
+                        if(boss2) drawBoss(boss2, 0, boss2.maxHealth, undefined, chaosFactor);
+                    } else if (timer < 200) {
+                        const progress = (timer - 120) / 80;
+                        const scale = 1 - progress;
+                        if(boss) {
+                            ctx.save();
+                            ctx.translate(boss.x + boss.width / 2, boss.y + boss.height / 2);
+                            ctx.scale(scale, scale);
+                            drawBoss(boss, 0, boss.maxHealth);
+                            ctx.restore();
+                        }
+                         if(boss2) {
+                            ctx.save();
+                            ctx.translate(boss2.x + boss2.width / 2, boss2.y + boss2.height / 2);
+                            ctx.scale(scale, scale);
+                            drawBoss(boss2, 0, boss2.maxHealth);
+                            ctx.restore();
+                        }
+
+                        particles.forEach(p => {
+                            const dx = (canvas.width / 2) - p.x;
+                            const dy = (canvas.height / 2) - p.y;
+                            const dist = Math.hypot(dx, dy);
+                            if (dist > 10) {
+                                p.vx += (dx / dist) * 0.8;
+                                p.vy += (dy / dist) * 0.8;
+                            }
+                        });
+                        
+                    } else {
+                        const progress = (timer - 200) / 40;
+                        ctx.fillStyle = `rgba(255, 255, 255, ${progress * 1.2})`;
+                        ctx.fillRect(0,0,canvas.width, canvas.height);
+                    }
+                    if (timer >= duration) { showGameOver(true); }
                 }
                 drawPlayer();
-            } else if (transitionState.active) {
+            } else if (gameState === 'boss50Phase3Transition') {
                 transitionState.timer++;
                 const progress = transitionState.timer / transitionState.duration;
-                ctx.fillStyle = `rgba(0, 0, 0, ${Math.min(1, progress * 2)})`;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                drawBackground();
+                
+                const pulse_duration = 0.33;
+                const split_duration = 0.66;
 
-                if (transitionState.timer >= transitionState.duration) {
-                    if (transitionState.onComplete) {
-                        transitionState.onComplete();
+                if (progress < pulse_duration) {
+                    const pulseProgress = progress / pulse_duration;
+                    const scale = 1 + Math.sin(pulseProgress * Math.PI * 4) * 0.1;
+                    triggerScreenShake(5 + Math.sin(pulseProgress * Math.PI * 4) * 5, 5);
+                    ctx.save();
+                    ctx.translate(boss.x + boss.width/2, boss.y + boss.height/2);
+                    ctx.scale(scale, scale);
+                    ctx.translate(-(boss.x + boss.width/2), -(boss.y + boss.height/2));
+                    drawBoss(boss, bossHealth, boss.maxHealth);
+                    ctx.restore();
+                } else {
+                    const splitProgress = (progress - pulse_duration) / (1 - pulse_duration);
+                    const easeOutSplit = 1 - Math.pow(1 - splitProgress, 3);
+                    const separation = (canvas.height * 0.25) * easeOutSplit;
+                    
+                    boss.y = canvas.height/2 - boss.height/2 - separation;
+                    boss2.y = canvas.height/2 - boss2.height/2 + separation;
+                    boss2.alpha = splitProgress;
+                    
+                    if (progress < split_duration) {
+                        const linkProgress = (progress - pulse_duration) / (split_duration - pulse_duration);
+                        const alpha = 1 - linkProgress;
+                        const mainColor = `rgba(231, 76, 60, ${alpha * 0.7})`;
+                        ctx.fillStyle = mainColor;
+                        ctx.beginPath();
+                        ctx.moveTo(boss.x + boss.width/2, boss.y + boss.height);
+                        ctx.bezierCurveTo(boss.x + boss.width/2 + 50 * (1-linkProgress), boss.y + boss.height/2, boss2.x + boss2.width/2 + 50*(1-linkProgress), boss2.y + boss2.height/2, boss2.x + boss2.width/2, boss2.y);
+                        ctx.bezierCurveTo(boss2.x + boss2.width/2 - 50 * (1-linkProgress), boss2.y + boss2.height/2, boss.x + boss.width/2 - 50*(1-linkProgress), boss.y + boss.height/2, boss.x + boss.width/2, boss.y + boss.height);
+                        ctx.closePath();
+                        ctx.fill();
                     }
+
+                    if (Math.abs(progress - split_duration) < 0.02) {
+                        triggerScreenShake(25, 20);
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                        ctx.fillRect(0,0,canvas.width, canvas.height);
+                    }
+
+                    drawBoss(boss, bossHealth, boss.maxHealth);
+                    drawBoss(boss2, 0, boss.maxHealth);
+                }
+
+                drawPlayer();
+                if (transitionState.timer >= transitionState.duration) {
+                    if (transitionState.onComplete) transitionState.onComplete();
                     transitionState.active = false;
-                    transitionState.timer = 0;
+                }
+            } else if (gameState.includes('Transition')) {
+                transitionState.timer++;
+                const progress = transitionState.timer / transitionState.duration;
+                drawBackground();
+                drawPlayer();
+                
+                let overlayOpacity = 0;
+                let overlayColor = '0,0,15';
+                
+                if (gameState === 'boss50Phase2Transition' && boss) {
+                    boss.alpha = progress;
+                    drawBoss(boss, bossHealth, boss.maxHealth);
+                }
+
+                if(gameState === 'boss50QTETransition') { overlayOpacity = progress * 0.9; }
+                if(gameState === 'boss50Phase2Transition') { overlayOpacity = 1 - progress; overlayColor = '255,255,255';}
+
+                ctx.fillStyle = `rgba(${overlayColor}, ${overlayOpacity})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                if (transitionState.timer >= transitionState.duration) {
+                    if (transitionState.onComplete) transitionState.onComplete();
+                    transitionState.active = false;
                 }
             } else {
                 drawPipes();
                 drawProjectiles(bossProjectiles);
                 drawProjectiles(playerProjectiles);
-                drawBoss();
+                
+                if (boss && boss.attackState === 'attacking' && boss.history && boss.history.length > 1) {
+                    const gradient = ctx.createLinearGradient(boss.history[0].x, boss.history[0].y, boss.x, boss.y);
+                    gradient.addColorStop(0, 'rgba(231, 76, 60, 0)');
+                    gradient.addColorStop(1, 'rgba(231, 76, 60, 0.5)');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    
+                    const firstPoint = boss.history[0];
+                    const perpAngle1 = firstPoint.rotation + Math.PI / 2;
+                    ctx.moveTo(firstPoint.x + Math.cos(perpAngle1) * 10, firstPoint.y + Math.sin(perpAngle1) * 10);
+
+                    for(let i = 1; i < boss.history.length; i++) {
+                        const p = boss.history[i];
+                        const trailWidth = (i / boss.history.length) * 80;
+                        const perpAngle = p.rotation + Math.PI / 2;
+                        ctx.lineTo(p.x + Math.cos(perpAngle) * trailWidth, p.y + Math.sin(perpAngle) * trailWidth);
+                    }
+                    for(let i = boss.history.length - 1; i >= 1; i--) {
+                        const p = boss.history[i];
+                        const trailWidth = (i / boss.history.length) * 80;
+                        const perpAngle = p.rotation - Math.PI / 2;
+                        ctx.lineTo(p.x + Math.cos(perpAngle) * trailWidth, p.y + Math.sin(perpAngle) * trailWidth);
+                    }
+                    
+                    const perpAngle2 = firstPoint.rotation - Math.PI / 2;
+                    ctx.lineTo(firstPoint.x + Math.cos(perpAngle2) * 10, firstPoint.y + Math.sin(perpAngle2) * 10);
+
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                
+                drawBoss(boss, bossHealth, boss?.maxHealth, undefined, 0, boss?.attackState === 'attacking');
+                if (boss2 && gameState === 'boss50Phase3') {
+                    drawBoss(boss2, boss2Health, boss2.maxHealth);
+                }
+                drawBossTelegraph();
                 drawPlayer(); 
                 if (gameState === 'postBossCountdown') {
                     drawCountdown();
                 }
-                // MODIFICAÇÃO INICIADA: Chama a função para desenhar o QTE quando estiver ativo.
                 if (qteState.active) {
                     drawQTE();
                 }
-                // MODIFICAÇÃO FINALIZADA
                 if (gameState !== 'bossIntro') drawUI();
             }
             
@@ -1190,7 +1578,7 @@
             }
             frames = gameFrames;
             
-            ctx.restore(); // Restore from screen shake
+            ctx.restore(); 
         }
         
         function startGame() {
@@ -1203,6 +1591,11 @@
 
         function gameOver() { 
             if (gameState === 'deathAnimation' || gameState === 'gameOver' || gameState === 'win') return;
+
+            bossProjectiles = [];
+            playerProjectiles = [];
+
+            qteState.active = false;
             cancelAnimationFrame(animationFrameId);
             gameState = 'deathAnimation';
             deathState = { active: true, timer: 0, duration: 90, rotationSpeed: 0.1, flashOpacity: 1 };
@@ -1224,9 +1617,13 @@
             score = 0; level = 1; gameSpeed = 1.0;
             pipes = []; particles = []; bossProjectiles = []; playerProjectiles = [];
             boss = null; boss25Defeated = false;
+            boss2 = null; bossHealth = 0; boss2Health = 0;
             setSpeedFromScore(); gameFrames = 0;
             cheatCode25Position = 0; cheatCode50Position = 0;
             countdownState.active = false;
+            qteState.active = false; 
+            qteFails = 0;
+            qteSuccessCount = 0;
             gameOverScreen.style.display = 'none';
             scoreDisplay.style.opacity = 1;
             levelDisplay.style.opacity = 1;
