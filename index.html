@@ -10,10 +10,6 @@
     <style>
         body { 
             margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
             background: #1a1a2e;
             font-family: 'Source Code Pro', monospace;
             overflow: hidden;
@@ -21,16 +17,15 @@
         
         #gameContainer {
             position: relative;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
-            border-radius: 10px;
-            overflow: hidden;
-            border: 3px solid #0f3460;
+            width: 100vw;
+            height: 100vh;
         }
         
         canvas { 
             display: block;
+            width: 100%;
+            height: 100%;
             background: linear-gradient(to bottom, #87ceeb, #98d8f0);
-            border-radius: 0px;
         }
 
         #scoreDisplay {
@@ -112,11 +107,93 @@
         .color-swatch:hover, .character-swatch:hover { transform: scale(1.15); }
         .color-swatch.selected, .character-swatch.selected { border-color: #fff; box-shadow: 0 0 10px #fff; }
 
+        /* --- TELA DE VITÓRIA ÉPICA --- */
+        #winScreen {
+            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+            border-color: #ffd700;
+            box-shadow: 0 0 35px rgba(255, 215, 0, 0.6);
+            overflow: hidden;
+            animation: fadeInWin 1s ease-out;
+        }
+
+        #winScreen h2 {
+            font-size: 5em;
+            color: #ffd700;
+            text-shadow: 0 0 15px #ffd700, 0 0 30px #ffd700, 0 0 50px #ffae00;
+            animation: textGlow 1.5s ease-in-out infinite alternate;
+        }
+
+        #winScreen .win-subtitle {
+            font-size: 1.4em;
+            color: #ecf0f1;
+            text-shadow: 1px 1px 2px #000;
+            opacity: 0;
+            animation: fadeInSlideUp 1s ease-out 0.5s forwards;
+        }
+
+        #winScreen .final-score-win {
+            font-size: 1.2em;
+            margin-top: 20px;
+            opacity: 0;
+            animation: fadeInSlideUp 1s ease-out 0.8s forwards;
+        }
+
+        #winScreen .restart-btn {
+            background: linear-gradient(to bottom, #f1c40f, #f39c12);
+            border-bottom: 3px solid #d35400;
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.5);
+            opacity: 0;
+            animation: fadeInSlideUp 1s ease-out 1.1s forwards;
+        }
+        #winScreen .restart-btn:hover {
+            box-shadow: 0 6px 20px rgba(243, 156, 18, 0.7);
+        }
+
+        @keyframes fadeInWin {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        @keyframes textGlow {
+            from { text-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700, 0 0 35px #ffae00; }
+            to { text-shadow: 0 0 20px #ffd700, 0 0 35px #ffae00, 0 0 50px #ffae00; }
+        }
+
+        @keyframes fadeInSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Animação de estrelas de fundo */
+        @keyframes move-twink-back {
+            from {background-position:0 0;}
+            to {background-position:-10000px 5000px;}
+        }
+        #stars, #stars2, #stars3 {
+            position:absolute;
+            top:0;
+            left:0;
+            right:0;
+            bottom:0;
+            width:100%;
+            height:100%;
+            display:block;
+            z-index: -1;
+        }
+        #stars {
+            background:#000 url(https://www.script-tutorials.com/demos/360/images/stars.png) repeat top center;
+            animation:move-twink-back 200s linear infinite;
+        }
+        #stars2 {
+            background:transparent url(https://www.script-tutorials.com/demos/360/images/twinkling.png) repeat top center;
+            animation:move-twink-back 150s linear infinite;
+        }
+
     </style>
 </head>
 <body>
     <div id="gameContainer">
-        <canvas id="gameCanvas" width="1800" height="900"></canvas>
+        <canvas id="gameCanvas"></canvas>
         <div id="scoreDisplay">0</div>
         <div id="levelDisplay">Level 1</div>
         <div id="instructionsText" class="instructions">ESPAÇO para pular</div>
@@ -192,6 +269,16 @@
             <p>Pontuação Final: <span id="finalScore">0</span></p>
             <button class="restart-btn" onclick="restartGame()">Jogar Novamente</button>
         </div>
+
+        <!-- TELA DE VITÓRIA ÉPICA -->
+        <div class="overlay" id="winScreen">
+            <div id="stars"></div>
+            <div id="stars2"></div>
+            <h2>VITÓRIA!</h2>
+            <p class="win-subtitle">A anomalia foi subjugada. O fluxo retornou ao normal.</p>
+            <p class="final-score-win">Pontuação Final: <span id="winFinalScore">0</span></p>
+            <button class="restart-btn" onclick="restartGame()">Jogar Novamente</button>
+        </div>
     </div>
 
     <script>
@@ -205,6 +292,14 @@
         const instructionsText = document.getElementById('instructionsText');
         const cinematicTop = document.getElementById('cinematicTop');
         const cinematicBottom = document.getElementById('cinematicBottom');
+        const winScreen = document.getElementById('winScreen');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
 
         const colorSelectionContainers = {
             jacare: document.getElementById('jacareColorSelection'),
@@ -604,7 +699,6 @@
             ctx.fillStyle = eyeGradient; ctx.beginPath(); ctx.arc(-50, -45 + bodyBob, 15, 0, Math.PI*2); ctx.fill();
         }
 
-        // MODIFICAÇÃO INICIADA: Função do chefe aprimorada com mais detalhes
         function drawElderKraken(isTrail, instance, transitionProgress, chaosFactor = 0, isDashing = false) {
             const hover = Math.sin(gameFrames * 0.08) * 15;
             const attackProgress = instance.attackAnimation.active ? instance.attackAnimation.frame / instance.attackAnimation.duration : 0;
@@ -628,13 +722,11 @@
                 let ex = Math.cos(angle) * 250 + Math.sin(gameFrames*0.07 + i) * (80 * (1 + chaosFactor));
                 let ey = Math.sin(angle) * 250 + Math.cos(gameFrames*0.07 + i) * (80 * (1 + chaosFactor));
                 
-                // Pontos da Curva de Bézier Cúbica
                 const p0 = {x: 0, y: 0}, p1 = {x: c1x, y: c1y}, p2 = {x: c2x, y: c2y}, p3 = {x: ex, y: ey};
                 
                 ctx.bezierCurveTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
                 ctx.stroke();
 
-                // Desenha as ventosas
                 if (!isTrail && !isDashing) {
                     for (let t = 0.3; t < 1.0; t += 0.15) {
                         const omt = 1 - t, omt2 = omt * omt, t2 = t * t;
@@ -656,7 +748,6 @@
                 ctx.scale(1.5, 0.6);
             }
             
-            // Manto de Energia
             if (instance.isEnraged && !isTrail) {
                 const mantlePulse = 140 + Math.sin(gameFrames * 0.07) * 20;
                 const mantleGradient = ctx.createRadialGradient(0, hover, 50, 0, hover, mantlePulse);
@@ -670,7 +761,6 @@
                 ctx.fill();
             }
 
-            // Cabeça com Textura
             const headGradient = ctx.createRadialGradient(0, hover, 10, 0, hover, 120);
             headGradient.addColorStop(0, accentColor);
             headGradient.addColorStop(1, mainColor);
@@ -682,7 +772,6 @@
             ctx.closePath();
             ctx.fill();
 
-            // Textura da Cabeça
             if (!isTrail) {
                 ctx.save();
                 ctx.globalAlpha = 0.2;
@@ -721,7 +810,6 @@
                 ctx.shadowBlur = 0;
             }
 
-            // Olho Aprimorado
             const irisRadius = instance.isEnraged ? 60 - attackGlow * 20 : 50;
             const irisColor = instance.isEnraged ? 'yellow' : '#00ffff';
             const irisGradient = ctx.createRadialGradient(0, hover, 5, 0, hover, irisRadius);
@@ -735,14 +823,12 @@
             ctx.arc(0, hover, irisRadius, 0, Math.PI * 2);
             ctx.fill();
 
-            // Anel de brilho interno
             ctx.strokeStyle = `${irisColor}80`;
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.arc(0, hover, irisRadius * 0.7, 0, Math.PI * 2);
             ctx.stroke();
             
-            // Pupila dinâmica
             const pupilHeight = 30 + Math.sin(gameFrames * 0.15) * 5;
             const pupilWidth = 15 - Math.sin(gameFrames * 0.15) * 3;
             ctx.fillStyle = 'black';
@@ -754,7 +840,6 @@
 
             ctx.restore();
         }
-        // MODIFICAÇÃO FINALIZADA
 
         function drawBackground() {
             const isFrozen = (gameState === 'deathAnimation' || gameState === 'bossDefeatAnimation' || gameState === 'bossIntro');
@@ -1024,6 +1109,8 @@
         }
 
         function triggerBossIntro(type) {
+            pipes = [];
+
             gameState = 'bossIntro';
             gameSpeed = 0.2;
             bossIntroState = {
@@ -1053,13 +1140,13 @@
         }
 
         function enterBoss25() {
-            gameState = 'boss25'; pipes = [];
+            gameState = 'boss25'; 
             createParticles(80, 'ember');
             boss.alpha = 1; boss.attackState = 'idle';
         }
 
         function enterBoss50Phase1() {
-            gameState = 'boss50Phase1'; pipes = [];
+            gameState = 'boss50Phase1';
             createParticles(150, 'abyss_particle');
             boss.alpha = 1; boss.attackState = 'idle';
         }
@@ -1080,13 +1167,13 @@
                 duration: 90, 
                 onComplete: () => {
                     gameState = 'boss50Phase2';
-                    boss.maxHealth = 80;
+                    boss.maxHealth = 40;
                     bossHealth = boss.maxHealth;
                     boss.isEnraged = true;
                     boss2 = null; 
                     boss2Health = 0;
                     boss.shootRate = 12;
-                    const originalPos = { x: canvas.width - 280, y: canvas.height / 2 - 90 };
+                    const originalPos = { x: canvas.width - (boss.width + 80), y: canvas.height / 2 - 90 };
                     boss = { ...boss, originalPos, attackState: 'idle', attackTimer: 180, attackTelegraph: {}, alpha: 1, history: [] };
                 }
             };
@@ -1102,7 +1189,7 @@
         function enterBoss50Phase3() {
             qteState.active = false;
             gameState = 'boss50Phase3Transition'; 
-            boss.x = canvas.width - 280; 
+            boss.x = canvas.width - (boss.width + 80);
             boss.y = canvas.height/2 - boss.height/2;
             boss2 = {...boss, alpha: 0}; 
             boss2Health = 0; 
@@ -1364,7 +1451,7 @@
                 player.rotation += deathState.rotationSpeed;
             }
             if (player.y > canvas.height + 50) {
-                 showGameOver(false);
+                 showGameOver();
             }
         }
         
@@ -1477,6 +1564,10 @@
                         score = 25; boss25Defeated = true; bossDefeatState.active = false;
                         player.x = 150; player.y = canvas.height / 2;
                         player.velocity = 0; player.rotation = 0;
+                        playerProjectiles = [];
+                        bossProjectiles = [];
+                        // CORREÇÃO: Limpa os canos restantes antes de voltar para a gameplay.
+                        pipes = [];
                         gameState = 'postBossCountdown';
                         countdownState.active = true;
                         countdownState.timer = 180;
@@ -1521,7 +1612,7 @@
                         ctx.fillStyle = `rgba(255, 255, 255, ${progress * 1.2})`;
                         ctx.fillRect(0,0,canvas.width, canvas.height);
                     }
-                    if (timer >= duration) { showGameOver(true); }
+                    if (timer >= duration) { showEpicWinScreen(); }
                 }
                 drawPlayer();
             } else if (gameState === 'boss50Phase3Transition') {
@@ -1684,12 +1775,22 @@
             gameLoop();
         }
 
-        function showGameOver(isWin) {
-            gameState = isWin ? 'win' : 'gameOver';
+        function showGameOver() {
+            gameState = 'gameOver';
             deathState.active = false;
             finalScore.textContent = score;
             gameOverScreen.style.display = 'block';
-            gameOverScreen.querySelector('h2').textContent = isWin ? 'VOCÊ VENCEU!' : 'Game Over!';
+        }
+
+        function showEpicWinScreen() {
+            if (gameState === 'win') return;
+            gameState = 'win';
+            bossDefeatState.active = false;
+            cancelAnimationFrame(animationFrameId);
+            const winFinalScore = document.getElementById('winFinalScore');
+            winFinalScore.textContent = score;
+            gameOverScreen.style.display = 'none';
+            winScreen.style.display = 'block';
         }
 
         function restartGame() {
@@ -1706,6 +1807,7 @@
             qteFails = 0;
             qteSuccessCount = 0;
             gameOverScreen.style.display = 'none';
+            winScreen.style.display = 'none';
             scoreDisplay.style.opacity = 1;
             levelDisplay.style.opacity = 1;
             startScreen.style.display = 'block';
@@ -1722,6 +1824,50 @@
             triggerBossIntro(bossLevel === 25 ? 'boss25' : 'boss50');
         }
 
+        function activateCheatPhase3() {
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            
+            score = 50;
+            level = 5;
+            boss25Defeated = true;
+            setSpeedFromScore();
+            
+            pipes = [];
+            playerProjectiles = [];
+            bossProjectiles = [];
+            
+            player.x = 150;
+            player.y = canvas.height / 2;
+
+            createParticles(150, 'abyss_particle');
+            
+            gameState = 'boss50Phase3';
+            const baseBossConfig = {
+                
+                width: 200, height: 200,
+                maxHealth: 60,
+                shootRate: 16, isEnraged: true,
+                alpha: 1,
+                attackAnimation: { active: false, frame: 0, duration: 30 },
+                attackState: 'advancing',
+                rotation: 0
+            };
+            baseBossConfig.x = canvas.width - (baseBossConfig.width + 80);
+
+            boss = { ...baseBossConfig, y: canvas.height * 0.25 - baseBossConfig.height / 2 };
+            bossHealth = boss.maxHealth;
+
+            boss2 = { ...baseBossConfig, y: canvas.height * 0.75 - baseBossConfig.height / 2 };
+            boss2Health = boss2.maxHealth;
+
+            scoreDisplay.style.opacity = 1;
+            levelDisplay.style.opacity = 1;
+            instructionsText.innerHTML = `W, A, S, D para mover • ESPAÇO para atirar`;
+            
+            gameLoop();
+        }
+
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
                 e.preventDefault(); keys.space = true;
@@ -1733,8 +1879,18 @@
                     cheatCode25Position++; if (cheatCode25Position === cheatCode25.length) { activateCheat(25); cheatCode25Position = 0; }
                 } else { cheatCode25Position = 0; }
                 if (e.key === cheatCode50[cheatCode50Position]) {
-                    cheatCode50Position++; if (cheatCode50Position === cheatCode50.length) { activateCheat(50); cheatCode50Position = 0; }
-                } else { cheatCode50Position = 0; }
+                    cheatCode50Position++;
+                    if (cheatCode50Position === cheatCode50.length) {
+                        if (e.shiftKey) {
+                            activateCheatPhase3();
+                        } else {
+                            activateCheat(50);
+                        }
+                        cheatCode50Position = 0;
+                    }
+                } else {
+                    cheatCode50Position = 0;
+                }
             }
             if (gameState === 'boss50QTE') handleQTEInput(e.key.toUpperCase());
             if (e.code === 'KeyW') keys.w = true; if (e.code === 'KeyA') keys.a = true;
@@ -1769,7 +1925,7 @@
             });
         });
 
-        document.querySelector('.character-swatch[data-character="jacare"]').click();
+        document.querySelector('.character-swatch[data-character="sapo"]').click();
         gameLoop();
     </script>
 </body>
